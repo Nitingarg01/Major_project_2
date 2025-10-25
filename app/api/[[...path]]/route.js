@@ -497,21 +497,56 @@ async function handleGetInterviews(request) {
   }
 }
 
-// TEXT TO SPEECH - POST /api/tts
+// TEXT TO SPEECH - POST /api/tts (PHASE 3 ENHANCED - with Viseme data)
 async function handleTextToSpeech(request) {
   try {
-    const { text } = await request.json();
+    const { text, returnVisemes = false } = await request.json();
     
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    // Generate audio using ElevenLabs
-    const audio = await elevenlabs.generate({
+    // Generate audio using ElevenLabs with optional viseme data
+    const audioOptions = {
       voice: 'Rachel', // Professional female voice
       text,
       model_id: 'eleven_multilingual_v2',
-    });
+    };
+
+    // If visemes requested, use text-to-speech with alignment
+    if (returnVisemes) {
+      try {
+        // ElevenLabs supports viseme/phoneme data through their alignment endpoint
+        const audioWithVisemes = await elevenlabs.textToSpeech.convertWithTimestamps(
+          'Rachel',
+          {
+            text,
+            model_id: 'eleven_multilingual_v2',
+            output_format: 'mp3_44100_128',
+          }
+        );
+
+        // Convert audio stream to buffer
+        const chunks = [];
+        for await (const chunk of audioWithVisemes.audio) {
+          chunks.push(chunk);
+        }
+        const audioBuffer = Buffer.concat(chunks);
+
+        // Return audio with viseme data
+        return NextResponse.json({
+          audio: audioBuffer.toString('base64'),
+          visemes: audioWithVisemes.alignment?.characters || [],
+          duration: audioWithVisemes.alignment?.duration_seconds || 0
+        });
+      } catch (visemeError) {
+        console.warn('Viseme generation failed, falling back to audio only:', visemeError.message);
+        // Fall through to standard audio generation
+      }
+    }
+
+    // Standard audio generation (without visemes)
+    const audio = await elevenlabs.generate(audioOptions);
 
     // Convert audio stream to buffer
     const chunks = [];
