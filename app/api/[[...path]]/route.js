@@ -9,6 +9,7 @@ const pdf = require('pdf-parse');
 import { ElevenLabsClient } from 'elevenlabs';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import AIService from '@/lib/ai-service';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
