@@ -390,23 +390,33 @@ export default function DashboardPage() {
                         </div>
                       )}
                     </div>
-                    {interview.status === 'completed' ? (
+                    <div className="flex gap-2">
+                      {interview.status === 'completed' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewFeedback(interview.id)}
+                        >
+                          View Feedback
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/interview/${interview.id}`)}
+                        >
+                          Continue
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleViewFeedback(interview.id)}
+                        onClick={() => openDeleteDialog(interview.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
-                        View Feedback
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push(`/interview/${interview.id}`)}
-                      >
-                        Continue
-                      </Button>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
