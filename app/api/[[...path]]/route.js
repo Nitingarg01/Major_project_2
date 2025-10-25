@@ -361,7 +361,7 @@ async function handleCreateInterview(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { resumeId, jobRole, experienceLevel, numberOfQuestions } = await request.json();
+    const { resumeId, jobRole, experienceLevel, numQuestions } = await request.json();
     
     if (!jobRole || !experienceLevel) {
       return NextResponse.json({ error: 'Job role and experience level are required' }, { status: 400 });
@@ -372,7 +372,7 @@ async function handleCreateInterview(request) {
     
     // Get resume if provided
     let resumeContext = '';
-    if (resumeId) {
+    if (resumeId && resumeId !== 'none') {
       const resume = await db.collection('resumes').findOne({ id: resumeId, userId: user.id });
       if (resume) {
         resumeContext = `\n\nCandidate's Resume Summary:\n${resume.extractedText?.substring(0, 1000)}`;
@@ -380,7 +380,8 @@ async function handleCreateInterview(request) {
     }
 
     // Generate interview questions using OpenAI (Emergent LLM Key)
-    const prompt = `Generate ${numberOfQuestions || 5} interview questions for a ${jobRole} position with ${experienceLevel} experience level.${resumeContext}
+    const numQs = numQuestions || 5;
+    const prompt = `Generate ${numQs} interview questions for a ${jobRole} position with ${experienceLevel} experience level.${resumeContext}
 
 The questions should:
 1. Be relevant to the role and experience level
@@ -389,7 +390,7 @@ The questions should:
 4. Progress from easier to harder
 
 Return ONLY a JSON array of question objects with this structure:
-[{"id": 1, "text": "question text", "type": "technical/behavioral"}]`;
+[{"question": "question text"}]`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -403,30 +404,33 @@ Return ONLY a JSON array of question objects with this structure:
     let questions = [];
     try {
       const responseText = completion.choices[0].message.content;
-      questions = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+      const parsed = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+      questions = parsed.map((q, index) => ({
+        id: index,
+        question: q.question || q.text || q
+      }));
     } catch (error) {
       console.error('Failed to parse questions:', error);
       // Fallback questions
       questions = [
-        { id: 1, text: `Tell me about yourself and your experience with ${jobRole}.`, type: 'behavioral' },
-        { id: 2, text: `What are your key strengths relevant to this ${jobRole} position?`, type: 'behavioral' },
-        { id: 3, text: `Describe a challenging project you worked on.`, type: 'behavioral' },
-        { id: 4, text: `Where do you see yourself in 5 years?`, type: 'behavioral' },
-        { id: 5, text: `Why are you interested in this position?`, type: 'behavioral' },
-      ];
+        { id: 0, question: `Tell me about yourself and your experience with ${jobRole}.` },
+        { id: 1, question: `What are your key strengths relevant to this ${jobRole} position?` },
+        { id: 2, question: `Describe a challenging project you worked on.` },
+        { id: 3, question: `Where do you see yourself in 5 years?` },
+        { id: 4, question: `Why are you interested in this position?` },
+      ].slice(0, numQs);
     }
 
     // Create interview record
     const interview = {
       id: uuidv4(),
       userId: user.id,
-      resumeId: resumeId || null,
+      resumeId: resumeId && resumeId !== 'none' ? resumeId : null,
       jobRole,
       experienceLevel,
-      numberOfQuestions: numberOfQuestions || 5,
+      numQuestions: numQs,
       questions,
-      responses: [],
-      status: 'pending',
+      status: 'in-progress',
       createdAt: new Date(),
     };
 
