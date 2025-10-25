@@ -413,6 +413,22 @@ export default function InterviewSessionPage() {
 
   const progress = ((currentQuestionIndex + 1) / interview.questions.length) * 100;
 
+  // Get current phase information
+  const currentQuestionData = interview.questions[currentQuestionIndex];
+  const currentPhase = currentQuestionData?.phase || 'interview';
+  
+  const phaseInfo = {
+    'greeting': { icon: '👋', label: 'Greeting', color: 'bg-blue-100 text-blue-700' },
+    'resume-discussion': { icon: '📋', label: 'Resume Discussion', color: 'bg-green-100 text-green-700' },
+    'projects': { icon: '🚀', label: 'Projects Deep-Dive', color: 'bg-purple-100 text-purple-700' },
+    'behavioral': { icon: '🧠', label: 'Behavioral', color: 'bg-orange-100 text-orange-700' },
+    'technical': { icon: '⚡', label: 'Technical', color: 'bg-red-100 text-red-700' },
+    'closing': { icon: '✨', label: 'Closing', color: 'bg-indigo-100 text-indigo-700' },
+    'general': { icon: '💬', label: 'General', color: 'bg-gray-100 text-gray-700' }
+  };
+  
+  const currentPhaseInfo = phaseInfo[currentPhase] || phaseInfo['general'];
+
   // PHASE 3: Mouth shape styles
   const getMouthShape = () => {
     switch (currentMouthShape) {
