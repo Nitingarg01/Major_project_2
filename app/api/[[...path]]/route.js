@@ -2,17 +2,16 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-// Temporarily commenting out problematic imports for authentication testing
-// import openai from '@/lib/openai-client';
-// import genAI from '@/lib/gemini-client';
+import openai from '@/lib/openai-client';
+import genAI from '@/lib/gemini-client';
 import { Resend } from 'resend';
-// import pdf from 'pdf-parse'; // Temporarily disabled due to compatibility issues
-// import { ElevenLabsClient } from 'elevenlabs';
+import pdf from 'pdf-parse';
+import { ElevenLabsClient } from 'elevenlabs';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-// const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
+const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
 
 // Helper function to handle CORS
 function handleCORS(response) {
