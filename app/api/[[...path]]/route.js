@@ -115,7 +115,7 @@ async function handleForgotPassword(request) {
     
     try {
       await resend.emails.send({
-        from: 'InterviewPro <onboarding@resend.dev>',
+        from: 'MY interview AI <onboarding@resend.dev>',
         to: email,
         subject: 'Password Reset Request',
         html: `
