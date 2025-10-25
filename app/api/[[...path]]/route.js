@@ -718,57 +718,94 @@ async function handleRoute(request, { params }) {
   const { path = [] } = params;
   const route = `/${path.join('/')}`;
   const method = request.method;
-    if (route === '/status' && method === 'POST') {
-      const body = await request.json()
-      
-      if (!body.client_name) {
-        return handleCORS(NextResponse.json(
-          { error: "client_name is required" }, 
-          { status: 400 }
-        ))
-      }
 
-      const statusObj = {
-        id: uuidv4(),
-        client_name: body.client_name,
-        timestamp: new Date()
-      }
-
-      await db.collection('status_checks').insertOne(statusObj)
-      return handleCORS(NextResponse.json(statusObj))
+  try {
+    // Root endpoint
+    if (route === '/' && method === 'GET') {
+      return handleCORS(NextResponse.json({ message: 'Interview Pro API' }));
     }
 
-    // Status endpoints - GET /api/status
-    if (route === '/status' && method === 'GET') {
-      const statusChecks = await db.collection('status_checks')
-        .find({})
-        .limit(1000)
-        .toArray()
+    // Register
+    if (route === '/register' && method === 'POST') {
+      return handleCORS(await handleRegister(request));
+    }
 
-      // Remove MongoDB's _id field from response
-      const cleanedStatusChecks = statusChecks.map(({ _id, ...rest }) => rest)
-      
-      return handleCORS(NextResponse.json(cleanedStatusChecks))
+    // Forgot password
+    if (route === '/forgot-password' && method === 'POST') {
+      return handleCORS(await handleForgotPassword(request));
+    }
+
+    // Reset password
+    if (route === '/reset-password' && method === 'POST') {
+      return handleCORS(await handleResetPassword(request));
+    }
+
+    // Resume upload
+    if (route === '/resume/upload' && method === 'POST') {
+      return handleCORS(await handleResumeUpload(request));
+    }
+
+    // Get resumes
+    if (route === '/resumes' && method === 'GET') {
+      return handleCORS(await handleGetResumes(request));
+    }
+
+    // Analyze resume for role
+    if (route === '/resume/analyze-role' && method === 'POST') {
+      return handleCORS(await handleAnalyzeResumeForRole(request));
+    }
+
+    // Create interview
+    if (route === '/interview/create' && method === 'POST') {
+      return handleCORS(await handleCreateInterview(request));
+    }
+
+    // Get all interviews
+    if (route === '/interviews' && method === 'GET') {
+      return handleCORS(await handleGetInterviews(request));
+    }
+
+    // Get specific interview
+    if (route.startsWith('/interview/') && !route.includes('/response') && !route.includes('/complete') && method === 'GET') {
+      const interviewId = path[1];
+      return handleCORS(await handleGetInterview(request, interviewId));
+    }
+
+    // Submit response
+    if (route.includes('/response') && method === 'POST') {
+      const interviewId = path[1];
+      return handleCORS(await handleSubmitResponse(request, interviewId));
+    }
+
+    // Complete interview
+    if (route.includes('/complete') && method === 'POST') {
+      const interviewId = path[1];
+      return handleCORS(await handleCompleteInterview(request, interviewId));
+    }
+
+    // Text to speech
+    if (route === '/tts' && method === 'POST') {
+      return handleCORS(await handleTextToSpeech(request));
     }
 
     // Route not found
     return handleCORS(NextResponse.json(
-      { error: `Route ${route} not found` }, 
+      { error: `Route ${route} not found` },
       { status: 404 }
-    ))
+    ));
 
   } catch (error) {
-    console.error('API Error:', error)
+    console.error('API Error:', error);
     return handleCORS(NextResponse.json(
-      { error: "Internal server error" }, 
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
-    ))
+    ));
   }
 }
 
 // Export all HTTP methods
-export const GET = handleRoute
-export const POST = handleRoute
-export const PUT = handleRoute
-export const DELETE = handleRoute
-export const PATCH = handleRoute
+export const GET = handleRoute;
+export const POST = handleRoute;
+export const PUT = handleRoute;
+export const DELETE = handleRoute;
+export const PATCH = handleRoute;
