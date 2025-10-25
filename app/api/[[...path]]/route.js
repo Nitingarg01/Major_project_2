@@ -500,7 +500,7 @@ async function handleGetInterviews(request) {
 // TEXT TO SPEECH - POST /api/tts
 async function handleTextToSpeech(request) {
   try {
-    const { text, voiceId } = await request.json();
+    const { text } = await request.json();
     
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -508,21 +508,25 @@ async function handleTextToSpeech(request) {
 
     // Generate audio using ElevenLabs
     const audio = await elevenlabs.generate({
-      voice: voiceId || 'Rachel', // Default voice
+      voice: 'Rachel', // Professional female voice
       text,
       model_id: 'eleven_multilingual_v2',
     });
 
-    // Convert audio stream to base64
+    // Convert audio stream to buffer
     const chunks = [];
     for await (const chunk of audio) {
       chunks.push(chunk);
     }
     const audioBuffer = Buffer.concat(chunks);
-    const audioBase64 = audioBuffer.toString('base64');
 
-    return NextResponse.json({ 
-      audio: `data:audio/mpeg;base64,${audioBase64}` 
+    // Return audio as blob
+    return new NextResponse(audioBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': audioBuffer.length.toString(),
+      },
     });
   } catch (error) {
     console.error('TTS error:', error);
