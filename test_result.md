@@ -242,15 +242,18 @@ backend:
   
   - task: "Submit Interview Response API"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Submits answer and gets AI feedback using OpenAI. Stores feedback with question."
+      - working: false
+        agent: "testing"
+        comment: "API structure ✅ working correctly (authentication, validation, MongoDB updates, fallback feedback). OpenAI integration ❌ failing due to invalid API key 'test_openai_key'. SOLUTION: Replace EMERGENT_LLM_KEY with real OpenAI API key. Fallback feedback system implemented."
   
   - task: "Complete Interview API"
     implemented: true
