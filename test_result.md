@@ -222,9 +222,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Registration API"
-    - "User Login API (Credentials)"
-    - "Forgot Password API"
+    - "Reset Password API" # Only remaining task needing full integration test
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
