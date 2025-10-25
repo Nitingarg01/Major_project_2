@@ -207,73 +207,10 @@ async function handleResumeUpload(request) {
       return NextResponse.json({ error: 'Failed to parse PDF' }, { status: 400 });
     }
 
-    // Enhanced resume analysis using Gemini - Extract detailed information
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const prompt = `Analyze this resume in detail and extract comprehensive information for interview preparation:
-
-Resume Content:
-${extractedText}
-
-Please provide a DETAILED analysis in JSON format with these keys:
-
-1. "overall" - Overall assessment of the candidate (2-3 sentences)
-2. "strengths" - Array of 4-6 key strengths
-3. "improvements" - Array of 3-5 specific areas for improvement
-4. "skills" - Array of technical and soft skills (split into technical and soft)
-5. "recommendations" - Array of 3-5 actionable recommendations
-6. "projects" - Array of projects with details:
-   - projectName: Name of the project
-   - description: Brief description
-   - technologies: Array of technologies used
-   - role: Candidate's role
-   - achievements: Key achievements or outcomes
-7. "experience" - Array of work experiences:
-   - company: Company name
-   - role: Job title
-   - duration: Time period
-   - responsibilities: Key responsibilities
-   - technologies: Technologies used
-8. "education" - Educational background
-9. "personalInfo" - Name, contact, summary/objective
-
-Format ONLY as valid JSON. Do not include any markdown formatting or explanation.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let analysis;
-    
-    try {
-      const analysisText = response.text();
-      // Try to parse JSON or use raw text
-      try {
-        // Remove markdown code blocks if present
-        const cleanedText = analysisText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        analysis = JSON.parse(cleanedText);
-      } catch {
-        // Fallback structure if JSON parsing fails
-        analysis = { 
-          raw: analysisText,
-          overall: "Resume analysis completed",
-          strengths: [],
-          improvements: [],
-          skills: { technical: [], soft: [] },
-          recommendations: [],
-          projects: [],
-          experience: []
-        };
-      }
-    } catch (error) {
-      analysis = { 
-        raw: response.text(),
-        overall: "Resume analysis completed",
-        strengths: [],
-        improvements: [],
-        skills: { technical: [], soft: [] },
-        recommendations: [],
-        projects: [],
-        experience: []
-      };
-    }
+    // Enhanced resume analysis using AI Service with fallback chain
+    console.log('Starting enhanced resume analysis...');
+    const analysis = await AIService.parseResumeDetailed(extractedText);
+    console.log('Resume analysis completed successfully');
 
     // Save resume to database
     const client = await clientPromise;
