@@ -272,15 +272,18 @@ backend:
   
   - task: "Text-to-Speech API (ElevenLabs)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "TTS using ElevenLabs API. Returns audio blob. Needs testing with real API key."
+      - working: false
+        agent: "testing"
+        comment: "API structure ✅ working correctly (proper request handling, audio streaming setup). ElevenLabs integration ❌ failing due to invalid API key 'test_elevenlabs_key'. Error: 401 'invalid_api_key' from ElevenLabs API. SOLUTION: Replace ELEVENLABS_API_KEY with real ElevenLabs API key from their free tier."
 
 frontend:
   - task: "Landing Page"
