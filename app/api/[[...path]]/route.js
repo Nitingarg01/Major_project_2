@@ -12,7 +12,10 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import AIService from '@/lib/ai-service';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
+// Initialize ElevenLabs client with explicit API key
+const elevenlabs = new ElevenLabsClient({ 
+  apiKey: process.env.ELEVENLABS_API_KEY || 'sk_9f3bbfeb63f5a7b05c2583d8613fbf9145bd773122abbd17'
+});
 
 // Helper function to handle CORS
 function handleCORS(response) {
