@@ -506,55 +506,27 @@ async function handleTextToSpeech(request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    // Generate audio using ElevenLabs with optional viseme data
+    // Generate audio using ElevenLabs
     // Using Sarah - professional female voice (voice_id: EXAVITQu4vr4xnSDxMaL)
     const voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - professional female voice
     
-    // If visemes requested, use text-to-speech with alignment
-    if (returnVisemes) {
-      try {
-        // ElevenLabs supports viseme/phoneme data through their alignment endpoint
-        const audioWithVisemes = await elevenlabs.textToSpeech.convertWithTimestamps(
-          voiceId,
-          {
-            text,
-            model_id: 'eleven_multilingual_v2',
-            output_format: 'mp3_44100_128',
-          }
-        );
-
-        // Convert audio stream to buffer
-        const chunks = [];
-        for await (const chunk of audioWithVisemes.audio) {
-          chunks.push(chunk);
-        }
-        const audioBuffer = Buffer.concat(chunks);
-
-        // Return audio with viseme data
-        return NextResponse.json({
-          audio: audioBuffer.toString('base64'),
-          visemes: audioWithVisemes.alignment?.characters || [],
-          duration: audioWithVisemes.alignment?.duration_seconds || 0
-        });
-      } catch (visemeError) {
-        console.warn('Viseme generation failed, falling back to audio only:', visemeError.message);
-        // Fall through to standard audio generation
-      }
-    }
-
-    // Standard audio generation (without visemes)
-    const audio = await elevenlabs.generate({
-      voice: voiceId,
-      text,
+    console.log('Generating TTS for text:', text.substring(0, 50) + '...');
+    
+    // Standard audio generation using the correct ElevenLabs API
+    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
+      text: text,
       model_id: 'eleven_multilingual_v2',
+      output_format: 'mp3_44100_128'
     });
 
     // Convert audio stream to buffer
     const chunks = [];
-    for await (const chunk of audio) {
+    for await (const chunk of audioStream) {
       chunks.push(chunk);
     }
     const audioBuffer = Buffer.concat(chunks);
+
+    console.log('TTS generation successful, audio size:', audioBuffer.length, 'bytes');
 
     // Return audio as blob
     return new NextResponse(audioBuffer, {
