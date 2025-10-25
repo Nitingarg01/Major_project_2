@@ -1314,49 +1314,34 @@ def generate_test_report(test_results):
     total_tests = 0
     passed_tests = 0
     
-    # Registration tests
-    print(f"\n{Colors.BOLD}User Registration API:{Colors.END}")
-    reg_results = test_results.get("registration", {})
-    for test_name, result in reg_results.items():
-        total_tests += 1
-        if result:
-            passed_tests += 1
-            print_success(f"{test_name.replace('_', ' ').title()}")
-        else:
-            print_error(f"{test_name.replace('_', ' ').title()}")
+    # Define test categories and their display names
+    test_categories = [
+        ("registration", "User Registration API"),
+        ("login", "User Login API"),
+        ("forgot_password", "Forgot Password API"),
+        ("reset_password", "Reset Password API"),
+        ("resume_upload", "Resume Upload API"),
+        ("get_resumes", "Get Resumes API"),
+        ("create_interview", "Create Interview API"),
+        ("get_interviews", "Get All Interviews API"),
+        ("get_interview", "Get Interview API"),
+        ("submit_response", "Submit Interview Response API"),
+        ("complete_interview", "Complete Interview API"),
+        ("text_to_speech", "Text-to-Speech API")
+    ]
     
-    # Login tests
-    print(f"\n{Colors.BOLD}User Login API:{Colors.END}")
-    login_results = test_results.get("login", {})
-    for test_name, result in login_results.items():
-        total_tests += 1
-        if result:
-            passed_tests += 1
-            print_success(f"{test_name.replace('_', ' ').title()}")
-        else:
-            print_error(f"{test_name.replace('_', ' ').title()}")
-    
-    # Forgot password tests
-    print(f"\n{Colors.BOLD}Forgot Password API:{Colors.END}")
-    forgot_results = test_results.get("forgot_password", {})
-    for test_name, result in forgot_results.items():
-        total_tests += 1
-        if result:
-            passed_tests += 1
-            print_success(f"{test_name.replace('_', ' ').title()}")
-        else:
-            print_error(f"{test_name.replace('_', ' ').title()}")
-    
-    # Reset password tests
-    print(f"\n{Colors.BOLD}Reset Password API:{Colors.END}")
-    reset_results = test_results.get("reset_password", {})
-    for test_name, result in reset_results.items():
-        total_tests += 1
-        if result:
-            passed_tests += 1
-            print_success(f"{test_name.replace('_', ' ').title()}")
-        else:
-            print_error(f"{test_name.replace('_', ' ').title()}")
+    # Process each test category
+    for category_key, category_name in test_categories:
+        if category_key in test_results:
+            print(f"\n{Colors.BOLD}{category_name}:{Colors.END}")
+            category_results = test_results[category_key]
+            for test_name, result in category_results.items():
+                total_tests += 1
+                if result:
+                    passed_tests += 1
+                    print_success(f"{test_name.replace('_', ' ').title()}")
+                else:
+                    print_error(f"{test_name.replace('_', ' ').title()}")
     
     # Overall summary
     print(f"\n{Colors.BOLD}OVERALL RESULTS:{Colors.END}")
@@ -1369,6 +1354,12 @@ def generate_test_report(test_results):
     
     # Critical issues
     critical_issues = []
+    
+    # Authentication critical issues
+    reg_results = test_results.get("registration", {})
+    login_results = test_results.get("login", {})
+    forgot_results = test_results.get("forgot_password", {})
+    
     if not reg_results.get("valid_registration"):
         critical_issues.append("User registration not working")
     if not login_results.get("valid_login"):
@@ -1376,12 +1367,54 @@ def generate_test_report(test_results):
     if not forgot_results.get("valid_email"):
         critical_issues.append("Forgot password not working")
     
+    # New API critical issues
+    resume_results = test_results.get("resume_upload", {})
+    interview_create_results = test_results.get("create_interview", {})
+    interview_response_results = test_results.get("submit_response", {})
+    interview_complete_results = test_results.get("complete_interview", {})
+    tts_results = test_results.get("text_to_speech", {})
+    
+    if not resume_results.get("valid_upload"):
+        critical_issues.append("Resume upload with Gemini analysis not working")
+    if not interview_create_results.get("valid_create"):
+        critical_issues.append("Interview creation with OpenAI not working")
+    if not interview_response_results.get("valid_submit"):
+        critical_issues.append("Interview response submission with OpenAI feedback not working")
+    if not interview_complete_results.get("valid_complete"):
+        critical_issues.append("Interview completion with OpenAI feedback not working")
+    if not tts_results.get("valid_tts"):
+        critical_issues.append("Text-to-Speech with ElevenLabs not working")
+    
+    # API Integration Status
+    print(f"\n{Colors.BOLD}API INTEGRATION STATUS:{Colors.END}")
+    
+    # Gemini Integration
+    if resume_results.get("valid_upload"):
+        print_success("Gemini API (Resume Analysis) - Working")
+    else:
+        print_error("Gemini API (Resume Analysis) - Failed")
+    
+    # OpenAI Integration
+    openai_working = (interview_create_results.get("valid_create") and 
+                     interview_response_results.get("valid_submit") and 
+                     interview_complete_results.get("valid_complete"))
+    if openai_working:
+        print_success("OpenAI API (Interview Questions & Feedback) - Working")
+    else:
+        print_error("OpenAI API (Interview Questions & Feedback) - Failed")
+    
+    # ElevenLabs Integration
+    if tts_results.get("valid_tts"):
+        print_success("ElevenLabs API (Text-to-Speech) - Working")
+    else:
+        print_error("ElevenLabs API (Text-to-Speech) - Failed")
+    
     if critical_issues:
         print(f"\n{Colors.RED}{Colors.BOLD}CRITICAL ISSUES:{Colors.END}")
         for issue in critical_issues:
             print_error(issue)
     else:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}✅ All critical authentication flows working!{Colors.END}")
+        print(f"\n{Colors.GREEN}{Colors.BOLD}✅ All critical backend APIs working!{Colors.END}")
     
     return {
         "total_tests": total_tests,
