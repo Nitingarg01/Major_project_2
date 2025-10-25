@@ -286,7 +286,11 @@ export default function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/resume/${resume.id}`)}
+                    >
                       View Analysis
                     </Button>
                   </div>
