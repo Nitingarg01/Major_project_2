@@ -278,11 +278,19 @@ async function handleGetResumes(request) {
     
     const resumes = await db.collection('resumes')
       .find({ userId: user.id })
-      .project({ fileData: 0 }) // Exclude large file data
+      .project({ fileData: 0, extractedText: 0 }) // Exclude large data
       .sort({ uploadDate: -1 })
       .toArray();
 
-    return NextResponse.json({ resumes });
+    // Transform the data to match frontend expectations
+    const transformedResumes = resumes.map(resume => ({
+      id: resume.id,
+      filename: resume.fileName,
+      uploadedAt: resume.uploadDate,
+      analysis: resume.analysis
+    }));
+
+    return NextResponse.json({ resumes: transformedResumes });
   } catch (error) {
     console.error('Get resumes error:', error);
     return NextResponse.json({ error: 'Failed to get resumes' }, { status: 500 });
