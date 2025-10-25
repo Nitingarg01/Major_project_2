@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BASE_URL = "http://localhost:3000"
+BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'http://localhost:3000')
 API_BASE = f"{BASE_URL}/api"
 
 # Test data
@@ -22,6 +22,10 @@ TEST_USER = {
     "email": f"sarah.johnson.{uuid.uuid4().hex[:8]}@testdomain.com",
     "password": "SecurePass123!"
 }
+
+# Global variables for storing test data
+UPLOADED_RESUME_ID = None
+CREATED_INTERVIEW_ID = None
 
 class Colors:
     GREEN = '\033[92m'
