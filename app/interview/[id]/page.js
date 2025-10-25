@@ -455,9 +455,16 @@ export default function InterviewSessionPage() {
             <h1 className="text-2xl font-bold">🎤 AI Interview Session</h1>
             <p className="text-indigo-200">Question {currentQuestionIndex + 1} of {interview.questions.length}</p>
           </div>
-          <div className="text-right text-white">
-            <p className="text-sm text-indigo-200">Job Role</p>
-            <p className="font-semibold">{interview.jobRole}</p>
+          <div className="text-right">
+            {/* Current Phase Badge */}
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${currentPhaseInfo.color} font-semibold mb-2`}>
+              <span className="text-lg">{currentPhaseInfo.icon}</span>
+              <span>{currentPhaseInfo.label}</span>
+            </div>
+            <div className="text-white">
+              <p className="text-sm text-indigo-200">Job Role</p>
+              <p className="font-semibold">{interview.jobRole}</p>
+            </div>
           </div>
         </div>
         
