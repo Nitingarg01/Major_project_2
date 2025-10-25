@@ -844,6 +844,12 @@ async function handleRoute(request, { params }) {
       return handleCORS(await handleCompleteInterview(request, interviewId));
     }
 
+    // Delete interview
+    if (route.startsWith('/interview/') && !route.includes('/response') && !route.includes('/complete') && method === 'DELETE') {
+      const interviewId = path[1];
+      return handleCORS(await handleDeleteInterview(request, interviewId));
+    }
+
     // Text to speech
     if (route === '/tts' && method === 'POST') {
       return handleCORS(await handleTextToSpeech(request));
