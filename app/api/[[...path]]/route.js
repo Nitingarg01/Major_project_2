@@ -534,7 +534,7 @@ async function handleTextToSpeech(request) {
   }
 }
 
-// SUBMIT RESPONSE - POST /api/interview/:id/response
+// SUBMIT RESPONSE - POST /api/interview/:id/response (PHASE 2 ENHANCED - Conversational)
 async function handleSubmitResponse(request, interviewId) {
   try {
     const user = await getUserFromSession(request);
@@ -542,7 +542,7 @@ async function handleSubmitResponse(request, interviewId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { questionIndex, answer } = await request.json();
+    const { questionIndex, answer, isFollowUp = false, followUpIndex = 0 } = await request.json();
     
     if (questionIndex === undefined || !answer) {
       return NextResponse.json({ error: 'Question index and answer are required' }, { status: 400 });
@@ -566,52 +566,100 @@ async function handleSubmitResponse(request, interviewId) {
       return NextResponse.json({ error: 'Question not found' }, { status: 404 });
     }
 
-    // Analyze response using OpenAI
-    const analysisPrompt = `Analyze this interview response:
-
-Question: ${question.question}
-Response: ${answer}
-Job Role: ${interview.jobRole}
-Experience Level: ${interview.experienceLevel}
-
-Provide constructive feedback with:
-1. Score (0-10)
-2. Brief comment (2-3 sentences)
-
-Format as JSON: {"score": number, "comment": "string"}`;
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are an expert interviewer providing constructive feedback.' },
-        { role: 'user', content: analysisPrompt }
-      ],
-      temperature: 0.7,
-    });
-
-    let feedback = {};
-    try {
-      const responseText = completion.choices[0].message.content;
-      feedback = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
-    } catch (error) {
-      console.error('Failed to parse feedback:', error);
-      feedback = {
-        score: 7,
-        comment: 'Good answer with room for improvement. Try to be more specific and provide concrete examples.'
-      };
+    // Initialize conversation history if not exists
+    if (!question.conversationHistory) {
+      question.conversationHistory = [];
     }
 
-    // Update the question with the response
-    const updatePath = `questions.${questionIndex}.response`;
+    // Add this answer to conversation history
+    question.conversationHistory.push({
+      question: isFollowUp ? question.currentFollowUp : question.question,
+      answer: answer,
+      timestamp: new Date()
+    });
+
+    // Generate follow-up question using AI
+    const followUpDecision = await AIService.generateFollowUpQuestion(
+      question.question,
+      answer,
+      question.conversationHistory,
+      interview.resumeAnalysis || {},
+      interview.jobRole
+    );
+
+    // Update question in database with conversation history and follow-up
+    const updateData = {
+      [`questions.${questionIndex}.conversationHistory`]: question.conversationHistory,
+      [`questions.${questionIndex}.hasFollowUp`]: followUpDecision.hasFollowUp,
+      [`questions.${questionIndex}.currentFollowUp`]: followUpDecision.followUpQuestion
+    };
+
+    await db.collection('interviews').updateOne(
+      { id: interviewId },
+      { $set: updateData }
+    );
+
+    return NextResponse.json({ 
+      success: true,
+      conversationHistory: question.conversationHistory,
+      followUp: {
+        hasFollowUp: followUpDecision.hasFollowUp,
+        question: followUpDecision.followUpQuestion,
+        reason: followUpDecision.reason
+      }
+    });
+  } catch (error) {
+    console.error('Submit response error:', error);
+    return NextResponse.json({ error: 'Failed to submit response' }, { status: 500 });
+  }
+}
+
+// FINALIZE QUESTION - POST /api/interview/:id/finalize-question (PHASE 2 - Get feedback for conversation)
+async function handleFinalizeQuestion(request, interviewId) {
+  try {
+    const user = await getUserFromSession(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { questionIndex } = await request.json();
+    
+    if (questionIndex === undefined) {
+      return NextResponse.json({ error: 'Question index is required' }, { status: 400 });
+    }
+
+    const client = await clientPromise;
+    const db = client.db('Cluster0');
+    
+    const interview = await db.collection('interviews').findOne({ 
+      id: interviewId, 
+      userId: user.id 
+    });
+
+    if (!interview) {
+      return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
+    }
+
+    const question = interview.questions[questionIndex];
+    if (!question) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    // Analyze the complete conversation for this question
+    const feedback = await AIService.analyzeConversation(
+      question.question,
+      question.conversationHistory || [],
+      interview.jobRole,
+      interview.experienceLevel
+    );
+
+    // Store feedback in database
     await db.collection('interviews').updateOne(
       { id: interviewId },
       { 
         $set: { 
-          [updatePath]: {
-            answer,
-            feedback,
-            timestamp: new Date()
-          }
+          [`questions.${questionIndex}.feedback`]: feedback,
+          [`questions.${questionIndex}.completed`]: true
         }
       }
     );
@@ -621,8 +669,8 @@ Format as JSON: {"score": number, "comment": "string"}`;
       feedback 
     });
   } catch (error) {
-    console.error('Submit response error:', error);
-    return NextResponse.json({ error: 'Failed to submit response' }, { status: 500 });
+    console.error('Finalize question error:', error);
+    return NextResponse.json({ error: 'Failed to finalize question' }, { status: 500 });
   }
 }
 
