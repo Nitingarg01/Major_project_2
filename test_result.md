@@ -197,15 +197,18 @@ backend:
   
   - task: "Create Interview API"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Creates interview with AI-generated questions using OpenAI (Emergent LLM Key). Needs testing."
+      - working: false
+        agent: "testing"
+        comment: "API structure ✅ working correctly (proper authentication, validation, MongoDB operations, fallback questions). OpenAI integration ❌ failing due to invalid API key 'test_openai_key'. SOLUTION: Replace EMERGENT_LLM_KEY with real OpenAI API key. Fallback question generation implemented as backup."
   
   - task: "Get Interview API"
     implemented: true
