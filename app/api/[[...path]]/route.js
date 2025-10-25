@@ -674,7 +674,7 @@ async function handleFinalizeQuestion(request, interviewId) {
   }
 }
 
-// COMPLETE INTERVIEW - POST /api/interview/:id/complete
+// COMPLETE INTERVIEW - POST /api/interview/:id/complete (PHASE 2 ENHANCED)
 async function handleCompleteInterview(request, interviewId) {
   try {
     const user = await getUserFromSession(request);
@@ -694,65 +694,97 @@ async function handleCompleteInterview(request, interviewId) {
       return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
     }
 
-    // Calculate overall score from responses
+    // Calculate overall score from individual question feedbacks
     const scores = interview.questions
-      .filter(q => q.response?.feedback?.score)
-      .map(q => q.response.feedback.score);
+      .filter(q => q.feedback?.score)
+      .map(q => q.feedback.score);
     
     const overallScore = scores.length > 0 
       ? scores.reduce((a, b) => a + b, 0) / scores.length
       : 0;
 
-    // Collect all feedback
-    const allFeedback = interview.questions
-      .filter(q => q.response?.feedback)
-      .map(q => q.response.feedback);
+    // Collect all strengths and improvements from individual questions
+    const allStrengths = [];
+    const allImprovements = [];
+    
+    interview.questions.forEach(q => {
+      if (q.feedback?.strengths) {
+        allStrengths.push(...q.feedback.strengths);
+      }
+      if (q.feedback?.improvements) {
+        allImprovements.push(...q.feedback.improvements);
+      }
+    });
 
-    // Generate comprehensive feedback using OpenAI
-    const feedbackPrompt = `Generate comprehensive interview feedback:
+    // Generate comprehensive interview summary
+    const summaryPrompt = `Provide a comprehensive interview performance summary:
 
 Job Role: ${interview.jobRole}
 Experience Level: ${interview.experienceLevel}
-Number of Questions: ${interview.questions.length}
+Questions: ${interview.questions.length}
 Overall Score: ${overallScore.toFixed(1)}/10
 
-Provide:
-1. 3-5 key strengths demonstrated
-2. 3-5 areas needing improvement
-3. Make it specific and actionable
+INDIVIDUAL QUESTION PERFORMANCE:
+${interview.questions.map((q, i) => `
+Question ${i + 1}: ${q.question}
+Score: ${q.feedback?.score || 'N/A'}/10
+Strengths: ${q.feedback?.strengths?.join(', ') || 'N/A'}
+Improvements: ${q.feedback?.improvements?.join(', ') || 'N/A'}
+`).join('\n')}
 
-Format as JSON: {"strengths": ["strength1", "strength2"], "improvements": ["improvement1", "improvement2"]}`;
+TASK: Provide a comprehensive summary with:
+1. Top 3-5 overall strengths across all questions
+2. Top 3-5 areas for improvement with specific actionable advice
+3. Overall assessment paragraph (3-4 sentences)
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are an expert interviewer providing comprehensive feedback.' },
-        { role: 'user', content: feedbackPrompt }
-      ],
-      temperature: 0.7,
-    });
+Return JSON:
+{
+  "strengths": ["Specific strength 1", "Specific strength 2", "Specific strength 3"],
+  "improvements": ["Specific actionable improvement 1", "Specific actionable improvement 2"],
+  "overallAssessment": "Comprehensive 3-4 sentence summary of performance"
+}
+
+Be constructive, specific, and helpful. Focus on actionable feedback.
+
+IMPORTANT: Return ONLY valid JSON.`;
 
     let comprehensiveFeedback = {};
+    
     try {
-      const responseText = completion.choices[0].message.content;
-      comprehensiveFeedback = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+      const response = await AIService.generateCompletion(summaryPrompt, 
+        'You are an expert interviewer providing comprehensive, actionable feedback to help candidates improve.', 
+        { temperature: 0.6, maxTokens: 800 }
+      );
+
+      const cleanedResponse = response
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      comprehensiveFeedback = JSON.parse(cleanedResponse);
     } catch (error) {
-      console.error('Failed to parse feedback:', error);
+      console.error('Failed to generate comprehensive feedback:', error);
+      
+      // Fallback: Use aggregated strengths and improvements
+      const uniqueStrengths = [...new Set(allStrengths)].slice(0, 5);
+      const uniqueImprovements = [...new Set(allImprovements)].slice(0, 5);
+      
       comprehensiveFeedback = {
-        strengths: [
-          'Clear communication skills',
-          'Good understanding of core concepts',
-          'Professional demeanor'
+        strengths: uniqueStrengths.length > 0 ? uniqueStrengths : [
+          'Demonstrated relevant experience',
+          'Clear communication',
+          'Technical understanding'
         ],
-        improvements: [
-          'Provide more specific examples',
-          'Elaborate on technical details',
-          'Structure answers using STAR method'
-        ]
+        improvements: uniqueImprovements.length > 0 ? uniqueImprovements : [
+          'Provide more specific examples with measurable outcomes',
+          'Elaborate on technical decision-making process',
+          'Use the STAR method (Situation, Task, Action, Result) for behavioral questions'
+        ],
+        overallAssessment: `Overall performance was ${overallScore >= 8 ? 'excellent' : overallScore >= 6 ? 'good' : 'satisfactory'}. The candidate showed ${uniqueStrengths.length > 0 ? uniqueStrengths[0].toLowerCase() : 'potential'}, but could improve by ${uniqueImprovements.length > 0 ? uniqueImprovements[0].toLowerCase() : 'providing more detail'}.`
       };
     }
 
-    // Update interview
+    // Update interview with completion data
     await db.collection('interviews').updateOne(
       { id: interviewId },
       { 
@@ -761,6 +793,7 @@ Format as JSON: {"strengths": ["strength1", "strength2"], "improvements": ["impr
           overallScore: parseFloat(overallScore.toFixed(1)),
           strengths: comprehensiveFeedback.strengths || [],
           improvements: comprehensiveFeedback.improvements || [],
+          overallAssessment: comprehensiveFeedback.overallAssessment || '',
           completedAt: new Date()
         }
       }
@@ -770,7 +803,8 @@ Format as JSON: {"strengths": ["strength1", "strength2"], "improvements": ["impr
       success: true, 
       overallScore: parseFloat(overallScore.toFixed(1)),
       strengths: comprehensiveFeedback.strengths || [],
-      improvements: comprehensiveFeedback.improvements || []
+      improvements: comprehensiveFeedback.improvements || [],
+      overallAssessment: comprehensiveFeedback.overallAssessment || ''
     });
   } catch (error) {
     console.error('Complete interview error:', error);
