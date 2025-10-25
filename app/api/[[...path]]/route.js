@@ -642,11 +642,19 @@ async function handleCompleteInterview(request, interviewId) {
       return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
     }
 
-    // Calculate overall score
-    const scores = interview.responses.map(r => r.analysis?.score || 0);
+    // Calculate overall score from responses
+    const scores = interview.questions
+      .filter(q => q.response?.feedback?.score)
+      .map(q => q.response.feedback.score);
+    
     const overallScore = scores.length > 0 
-      ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+      ? scores.reduce((a, b) => a + b, 0) / scores.length
       : 0;
+
+    // Collect all feedback
+    const allFeedback = interview.questions
+      .filter(q => q.response?.feedback)
+      .map(q => q.response.feedback);
 
     // Generate comprehensive feedback using OpenAI
     const feedbackPrompt = `Generate comprehensive interview feedback:
@@ -654,18 +662,14 @@ async function handleCompleteInterview(request, interviewId) {
 Job Role: ${interview.jobRole}
 Experience Level: ${interview.experienceLevel}
 Number of Questions: ${interview.questions.length}
-Responses Analyzed: ${interview.responses.length}
-Individual Scores: ${scores.join(', ')}
-Overall Score: ${overallScore}/10
+Overall Score: ${overallScore.toFixed(1)}/10
 
 Provide:
-1. Overall performance summary
-2. Key strengths demonstrated
-3. Areas needing improvement
-4. Specific recommendations
-5. Next steps for the candidate
+1. 3-5 key strengths demonstrated
+2. 3-5 areas needing improvement
+3. Make it specific and actionable
 
-Format as JSON: {summary, strengths: [], improvements: [], recommendations: [], nextSteps: []}`;
+Format as JSON: {"strengths": ["strength1", "strength2"], "improvements": ["improvement1", "improvement2"]}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -676,17 +680,23 @@ Format as JSON: {summary, strengths: [], improvements: [], recommendations: [], 
       temperature: 0.7,
     });
 
-    let feedback = {};
+    let comprehensiveFeedback = {};
     try {
       const responseText = completion.choices[0].message.content;
-      feedback = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+      comprehensiveFeedback = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
     } catch (error) {
-      feedback = {
-        summary: 'Good performance overall',
-        strengths: ['Clear communication', 'Good technical knowledge'],
-        improvements: ['Could elaborate more', 'More specific examples needed'],
-        recommendations: ['Practice behavioral questions', 'Prepare specific examples'],
-        nextSteps: ['Review feedback', 'Practice weak areas']
+      console.error('Failed to parse feedback:', error);
+      comprehensiveFeedback = {
+        strengths: [
+          'Clear communication skills',
+          'Good understanding of core concepts',
+          'Professional demeanor'
+        ],
+        improvements: [
+          'Provide more specific examples',
+          'Elaborate on technical details',
+          'Structure answers using STAR method'
+        ]
       };
     }
 
@@ -696,8 +706,9 @@ Format as JSON: {summary, strengths: [], improvements: [], recommendations: [], 
       { 
         $set: { 
           status: 'completed',
-          overallScore,
-          feedback,
+          overallScore: parseFloat(overallScore.toFixed(1)),
+          strengths: comprehensiveFeedback.strengths || [],
+          improvements: comprehensiveFeedback.improvements || [],
           completedAt: new Date()
         }
       }
@@ -705,8 +716,9 @@ Format as JSON: {summary, strengths: [], improvements: [], recommendations: [], 
 
     return NextResponse.json({ 
       success: true, 
-      overallScore,
-      feedback 
+      overallScore: parseFloat(overallScore.toFixed(1)),
+      strengths: comprehensiveFeedback.strengths || [],
+      improvements: comprehensiveFeedback.improvements || []
     });
   } catch (error) {
     console.error('Complete interview error:', error);
