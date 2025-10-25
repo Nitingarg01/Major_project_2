@@ -204,7 +204,7 @@ export default function HomePage() {
           <CardContent className="p-12 text-center">
             <h3 className="text-3xl font-bold mb-4">Ready to Ace Your Next Interview?</h3>
             <p className="text-xl mb-8 text-indigo-100">
-              Join thousands of candidates who have improved their interview skills with InterviewPro
+              Join thousands of candidates who have improved their interview skills with MY interview AI
             </p>
             <Button 
               onClick={() => router.push('/register')} 
