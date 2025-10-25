@@ -28,6 +28,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [interviewToDelete, setInterviewToDelete] = useState(null);
 
   useEffect(() => {
     setMounted(true);
