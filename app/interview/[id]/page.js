@@ -532,21 +532,36 @@ export default function InterviewSessionPage() {
                 {/* Question Card */}
                 <Card className="bg-white/95 shadow-xl">
                   <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <MessageCircle className="h-5 w-5 text-indigo-600" />
-                      <h3 className="text-lg font-semibold text-indigo-600">
-                        {conversationHistory.length > 0 ? 'Follow-up Question' : `Question ${currentQuestionIndex + 1}`}
-                      </h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5 text-indigo-600" />
+                        <h3 className="text-lg font-semibold text-indigo-600">
+                          {conversationHistory.length > 0 ? 'Follow-up Question' : `Question ${currentQuestionIndex + 1}`}
+                        </h3>
+                      </div>
+                      {/* Phase indicator in question card */}
+                      <span className={`text-xs px-2 py-1 rounded-full ${currentPhaseInfo.color}`}>
+                        {currentPhaseInfo.icon} {currentPhaseInfo.label}
+                      </span>
                     </div>
                     <p className="text-xl text-gray-800 leading-relaxed">{currentQuestion}</p>
+                    
+                    {/* Show question context if available */}
+                    {currentQuestionData?.context && !conversationHistory.length && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-sm text-gray-600 italic">
+                          💡 Focus: {currentQuestionData.context}
+                        </p>
+                      </div>
+                    )}
                     
                     {/* PHASE 2: Conversation History */}
                     {conversationHistory.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-xs text-gray-500 mb-2">Previous exchanges:</p>
+                        <p className="text-xs text-gray-500 mb-2">📝 Previous exchanges in this conversation:</p>
                         <div className="text-left space-y-2 max-h-32 overflow-y-auto">
                           {conversationHistory.map((exchange, idx) => (
-                            <div key={idx} className="text-sm">
+                            <div key={idx} className="text-sm bg-gray-50 p-2 rounded">
                               <p className="text-gray-600 font-medium">Q: {exchange.question}</p>
                               <p className="text-gray-500 text-xs truncate">A: {exchange.answer.substring(0, 100)}...</p>
                             </div>
