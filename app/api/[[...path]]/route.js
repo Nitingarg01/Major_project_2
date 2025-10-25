@@ -507,18 +507,15 @@ async function handleTextToSpeech(request) {
     }
 
     // Generate audio using ElevenLabs with optional viseme data
-    const audioOptions = {
-      voice: 'Rachel', // Professional female voice
-      text,
-      model_id: 'eleven_multilingual_v2',
-    };
-
+    // Using Sarah - professional female voice (voice_id: EXAVITQu4vr4xnSDxMaL)
+    const voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - professional female voice
+    
     // If visemes requested, use text-to-speech with alignment
     if (returnVisemes) {
       try {
         // ElevenLabs supports viseme/phoneme data through their alignment endpoint
         const audioWithVisemes = await elevenlabs.textToSpeech.convertWithTimestamps(
-          'Rachel',
+          voiceId,
           {
             text,
             model_id: 'eleven_multilingual_v2',
