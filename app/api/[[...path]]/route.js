@@ -738,6 +738,42 @@ Format as JSON: {"strengths": ["strength1", "strength2"], "improvements": ["impr
   }
 }
 
+// DELETE INTERVIEW - DELETE /api/interview/:id
+async function handleDeleteInterview(request, interviewId) {
+  try {
+    const user = await getUserFromSession(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const client = await clientPromise;
+    const db = client.db('Cluster0');
+    
+    const interview = await db.collection('interviews').findOne({ 
+      id: interviewId, 
+      userId: user.id 
+    });
+
+    if (!interview) {
+      return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
+    }
+
+    // Delete the interview
+    await db.collection('interviews').deleteOne({ 
+      id: interviewId, 
+      userId: user.id 
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Interview deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Delete interview error:', error);
+    return NextResponse.json({ error: 'Failed to delete interview' }, { status: 500 });
+  }
+}
+
 // Route handler function
 async function handleRoute(request, { params }) {
   const { path = [] } = params;
