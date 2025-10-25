@@ -3,22 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { FileText, ArrowLeft, CheckCircle, AlertCircle, Lightbulb, Award, Briefcase } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { 
+  ArrowLeft, FileText, Briefcase, Code, GraduationCap, 
+  Award, TrendingUp, Lightbulb, Target, User 
+} from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function ResumeAnalysisPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
-  const [mounted, setMounted] = useState(false);
+  const { toast } = useToast();
+  
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -28,271 +31,526 @@ export default function ResumeAnalysisPage() {
 
   useEffect(() => {
     if (session && params.id) {
-      fetchResumeAnalysis();
+      fetchResumeDetails();
     }
   }, [session, params.id]);
 
-  const fetchResumeAnalysis = async () => {
+  const fetchResumeDetails = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/resumes');
+      
       if (response.ok) {
         const data = await response.json();
         const foundResume = data.resumes.find(r => r.id === params.id);
         if (foundResume) {
           setResume(foundResume);
         } else {
+          toast({
+            title: 'Error',
+            description: 'Resume not found',
+            variant: 'destructive'
+          });
           router.push('/dashboard');
         }
       } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load resume details',
+          variant: 'destructive'
+        });
         router.push('/dashboard');
       }
     } catch (error) {
       console.error('Error fetching resume:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load resume details',
+        variant: 'destructive'
+      });
       router.push('/dashboard');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!mounted || status === 'loading' || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading resume analysis...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading resume analysis...</p>
         </div>
       </div>
     );
   }
 
-  if (!resume || !resume.analysis) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Analysis Not Available</h2>
-            <p className="text-gray-600 mb-4">Resume analysis data could not be found.</p>
-            <Button onClick={() => router.push('/dashboard')}>Back to Dashboard</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (!resume) {
+    return null;
   }
 
-  const analysis = resume.analysis;
-  
-  // Handle both JSON and raw text analysis
-  const hasStructuredAnalysis = analysis.overall || analysis.strengths || analysis.improvements || analysis.skills || analysis.recommendations;
-  
+  const analysis = resume.analysis || {};
+  const personalInfo = analysis.personalInfo || {};
+  const projects = analysis.projects || [];
+  const experience = analysis.experience || [];
+  const education = analysis.education || [];
+  const skills = analysis.skills || { technical: [], soft: [] };
+  const certifications = analysis.certifications || [];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Button
-            variant="ghost"
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="mb-8">
+          <Button 
+            variant="ghost" 
             onClick={() => router.push('/dashboard')}
-            className="flex items-center"
+            className="mb-4"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
-          <div className="flex items-center space-x-2">
-            <FileText className="h-8 w-8 text-indigo-600" />
-            <h1 className="text-2xl font-bold text-indigo-600">Resume Analysis</h1>
-          </div>
-          <div className="w-32"></div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-12 max-w-5xl">
-        {/* Header Card */}
-        <Card className="mb-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 shadow-2xl">
-          <CardContent className="p-8">
-            <div className="flex items-center space-x-4">
-              <div className="p-4 bg-white/20 rounded-full">
-                <FileText className="h-10 w-10" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-1">{resume.filename}</h2>
-                <p className="text-indigo-100">
-                  Uploaded {new Date(resume.uploadedAt).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </p>
-              </div>
+          
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                {personalInfo.name || 'Resume Analysis'}
+              </h1>
+              <p className="text-gray-600 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                {resume.filename}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <Badge variant="outline" className="text-sm">
+              Uploaded: {new Date(resume.uploadedAt).toLocaleDateString()}
+            </Badge>
+          </div>
+        </div>
 
-        {hasStructuredAnalysis ? (
-          <>
-            {/* Overall Assessment */}
-            {analysis.overall && (
-              <Card className="mb-8 border-2 border-indigo-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-indigo-900">
-                    <Award className="mr-2 h-6 w-6" />
-                    Overall Assessment
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-800 text-lg leading-relaxed">{analysis.overall}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Strengths */}
-            {analysis.strengths && (
-              <Card className="mb-8 border-2 border-green-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-green-700">
-                    <CheckCircle className="mr-2 h-6 w-6" />
-                    Key Strengths
-                  </CardTitle>
-                  <CardDescription>What makes your resume stand out</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {Array.isArray(analysis.strengths) ? (
-                    <ul className="space-y-3">
-                      {analysis.strengths.map((strength, index) => (
-                        <li key={index} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
-                          <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-800">{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-800">{analysis.strengths}</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Areas for Improvement */}
-            {analysis.improvements && (
-              <Card className="mb-8 border-2 border-orange-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-orange-700">
-                    <AlertCircle className="mr-2 h-6 w-6" />
-                    Areas for Improvement
-                  </CardTitle>
-                  <CardDescription>Suggestions to enhance your resume</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {Array.isArray(analysis.improvements) ? (
-                    <ul className="space-y-3">
-                      {analysis.improvements.map((improvement, index) => (
-                        <li key={index} className="flex items-start space-x-3 p-3 bg-orange-50 rounded-lg">
-                          <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-800">{improvement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-800">{analysis.improvements}</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Key Skills Identified */}
-            {analysis.skills && (
-              <Card className="mb-8 border-2 border-blue-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-blue-700">
-                    <Briefcase className="mr-2 h-6 w-6" />
-                    Key Skills Identified
-                  </CardTitle>
-                  <CardDescription>Skills highlighted in your resume</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {Array.isArray(analysis.skills) ? (
-                    <div className="flex flex-wrap gap-2">
-                      {analysis.skills.map((skill, index) => (
-                        <span 
-                          key={index}
-                          className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-800">{analysis.skills}</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Recommendations */}
-            {analysis.recommendations && (
-              <Card className="mb-8 border-2 border-purple-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-purple-700">
-                    <Lightbulb className="mr-2 h-6 w-6" />
-                    Recommendations for Improvement
-                  </CardTitle>
-                  <CardDescription>Action items to strengthen your resume</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {Array.isArray(analysis.recommendations) ? (
-                    <ul className="space-y-3">
-                      {analysis.recommendations.map((recommendation, index) => (
-                        <li key={index} className="flex items-start space-x-3 p-3 bg-purple-50 rounded-lg">
-                          <Lightbulb className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-800">{recommendation}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-800">{analysis.recommendations}</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </>
-        ) : (
-          /* Raw Analysis Text */
-          <Card className="mb-8">
+        {/* Overall Assessment */}
+        {analysis.overall && (
+          <Card className="mb-6 border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50">
             <CardHeader>
-              <CardTitle>AI Analysis</CardTitle>
-              <CardDescription>Detailed feedback on your resume</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-indigo-600" />
+                Overall Assessment
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose max-w-none">
-                <pre className="whitespace-pre-wrap text-gray-800 font-sans text-base leading-relaxed">
-                  {analysis.raw || JSON.stringify(analysis, null, 2)}
-                </pre>
-              </div>
+              <p className="text-gray-700 leading-relaxed">{analysis.overall}</p>
             </CardContent>
           </Card>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 justify-center">
-          <Button
-            onClick={() => router.push('/dashboard')}
-            variant="outline"
-            size="lg"
-          >
-            <ArrowLeft className="mr-2 h-5 w-5" />
-            Back to Dashboard
-          </Button>
-          <Button
-            onClick={() => router.push('/interview/setup')}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-            size="lg"
-          >
-            <Briefcase className="mr-2 h-5 w-5" />
-            Start Interview with This Resume
-          </Button>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Briefcase className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">{experience.length}</p>
+                <p className="text-sm text-gray-600">Work Experiences</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Code className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+                <p className="text-sm text-gray-600">Projects</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <GraduationCap className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">{skills.technical?.length || 0}</p>
+                <p className="text-sm text-gray-600">Technical Skills</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Award className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-gray-900">{certifications.length}</p>
+                <p className="text-sm text-gray-600">Certifications</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+
+        {/* Detailed Analysis Tabs */}
+        <Tabs defaultValue="projects" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="experience">Experience</TabsTrigger>
+            <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+            <TabsTrigger value="personal">Personal Info</TabsTrigger>
+          </TabsList>
+
+          {/* Projects Tab */}
+          <TabsContent value="projects" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Projects Portfolio</CardTitle>
+                <CardDescription>Detailed analysis of your project work</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {projects.length > 0 ? (
+                  projects.map((project, index) => (
+                    <div key={index} className="border-l-4 border-indigo-500 pl-4 py-2">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {project.projectName}
+                      </h3>
+                      <p className="text-gray-700 mb-3">{project.description}</p>
+                      
+                      {project.role && (
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Role:</strong> {project.role}
+                        </p>
+                      )}
+                      
+                      {project.technologies && project.technologies.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">Technologies:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {project.technologies.map((tech, i) => (
+                              <Badge key={i} variant="secondary">{tech}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {project.achievements && project.achievements.length > 0 && (
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">Key Achievements:</p>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                            {project.achievements.map((achievement, i) => (
+                              <li key={i}>{achievement}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {index < projects.length - 1 && <Separator className="mt-6" />}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No projects found in resume</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Experience Tab */}
+          <TabsContent value="experience" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Work Experience</CardTitle>
+                <CardDescription>Professional background and achievements</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {experience.length > 0 ? (
+                  experience.map((exp, index) => (
+                    <div key={index} className="border-l-4 border-purple-500 pl-4 py-2">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">{exp.role}</h3>
+                          <p className="text-indigo-600 font-medium">{exp.company}</p>
+                        </div>
+                        <Badge variant="outline">{exp.duration}</Badge>
+                      </div>
+                      
+                      {exp.location && (
+                        <p className="text-sm text-gray-600 mb-3">{exp.location}</p>
+                      )}
+                      
+                      {exp.responsibilities && exp.responsibilities.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">Responsibilities:</p>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                            {exp.responsibilities.map((resp, i) => (
+                              <li key={i}>{resp}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {exp.technologies && exp.technologies.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">Technologies Used:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {exp.technologies.map((tech, i) => (
+                              <Badge key={i} variant="secondary">{tech}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {exp.achievements && exp.achievements.length > 0 && (
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">Key Achievements:</p>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                            {exp.achievements.map((achievement, i) => (
+                              <li key={i}>{achievement}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {index < experience.length - 1 && <Separator className="mt-6" />}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-8">No work experience found in resume</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Skills Tab */}
+          <TabsContent value="skills" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Code className="h-5 w-5 text-indigo-600" />
+                    Technical Skills
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {skills.technical && skills.technical.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {skills.technical.map((skill, index) => (
+                        <Badge key={index} variant="default" className="bg-indigo-600">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No technical skills listed</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-purple-600" />
+                    Soft Skills
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {skills.soft && skills.soft.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {skills.soft.map((skill, index) => (
+                        <Badge key={index} variant="secondary" className="bg-purple-100">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No soft skills listed</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Education & Certifications */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5 text-green-600" />
+                    Education
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {education.length > 0 ? (
+                    education.map((edu, index) => (
+                      <div key={index} className="border-l-2 border-green-500 pl-3">
+                        <p className="font-semibold text-gray-900">{edu.degree}</p>
+                        <p className="text-sm text-gray-600">{edu.institution}</p>
+                        <p className="text-xs text-gray-500">{edu.year}</p>
+                        {edu.gpa && <p className="text-xs text-gray-500">GPA: {edu.gpa}</p>}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No education information found</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-orange-600" />
+                    Certifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {certifications.length > 0 ? (
+                    <ul className="space-y-2">
+                      {certifications.map((cert, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="text-orange-600 mt-1">•</span>
+                          <span className="text-gray-700">{cert}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No certifications listed</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Insights Tab */}
+          <TabsContent value="insights" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-700">
+                    <TrendingUp className="h-5 w-5" />
+                    Strengths
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analysis.strengths && analysis.strengths.length > 0 ? (
+                    <ul className="space-y-2">
+                      {analysis.strengths.map((strength, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="text-green-600 mt-1">✓</span>
+                          <span className="text-gray-700">{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No strengths analyzed</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-orange-200 bg-orange-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-orange-700">
+                    <Target className="h-5 w-5" />
+                    Areas for Improvement
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analysis.improvements && analysis.improvements.length > 0 ? (
+                    <ul className="space-y-2">
+                      {analysis.improvements.map((improvement, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="text-orange-600 mt-1">→</span>
+                          <span className="text-gray-700">{improvement}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No improvements suggested</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-700">
+                    <Lightbulb className="h-5 w-5" />
+                    Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analysis.recommendations && analysis.recommendations.length > 0 ? (
+                    <ul className="space-y-2">
+                      {analysis.recommendations.map((recommendation, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="text-blue-600 mt-1">💡</span>
+                          <span className="text-gray-700">{recommendation}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No recommendations available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Personal Info Tab */}
+          <TabsContent value="personal">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-indigo-600" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {personalInfo.name && (
+                  <div>
+                    <p className="text-sm text-gray-600">Name</p>
+                    <p className="text-lg font-semibold text-gray-900">{personalInfo.name}</p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {personalInfo.email && (
+                    <div>
+                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="text-gray-900">{personalInfo.email}</p>
+                    </div>
+                  )}
+                  
+                  {personalInfo.phone && (
+                    <div>
+                      <p className="text-sm text-gray-600">Phone</p>
+                      <p className="text-gray-900">{personalInfo.phone}</p>
+                    </div>
+                  )}
+                  
+                  {personalInfo.linkedin && (
+                    <div>
+                      <p className="text-sm text-gray-600">LinkedIn</p>
+                      <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" 
+                         className="text-indigo-600 hover:underline">
+                        {personalInfo.linkedin}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {personalInfo.github && (
+                    <div>
+                      <p className="text-sm text-gray-600">GitHub</p>
+                      <a href={personalInfo.github} target="_blank" rel="noopener noreferrer"
+                         className="text-indigo-600 hover:underline">
+                        {personalInfo.github}
+                      </a>
+                    </div>
+                  )}
+                </div>
+                
+                {personalInfo.summary && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">Professional Summary</p>
+                    <p className="text-gray-700 leading-relaxed">{personalInfo.summary}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
