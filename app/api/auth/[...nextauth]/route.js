@@ -47,7 +47,7 @@ export const authOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account.provider === 'google') {
+      if (account?.provider === 'google') {
         const client = await clientPromise;
         const db = client.db('Cluster0');
         const existingUser = await db.collection('users').findOne({ email: user.email });
@@ -86,4 +86,5 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-export default NextAuth(authOptions);
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
