@@ -708,12 +708,24 @@ export default function InterviewSessionPage() {
                 )}
               </div>
 
-              {/* Helper Text */}
+              {/* Helper Text - Phase Aware */}
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-xs text-blue-800">
-                  💡 <strong>Tip:</strong> {conversationHistory.length > 0 
-                    ? 'The interviewer is asking for more details. Provide specific examples!'
-                    : 'Speak clearly and provide detailed answers with specific examples.'}
+                  💡 <strong>Tip:</strong> {
+                    conversationHistory.length > 0 
+                      ? 'The interviewer wants more details. Provide specific examples and elaborate on your answer!'
+                      : currentPhase === 'greeting'
+                      ? 'Start with a brief introduction, then highlight your key experiences and what excites you about this role.'
+                      : currentPhase === 'resume-discussion'
+                      ? 'Give an overview of your experience. Connect your background to the role you\'re applying for.'
+                      : currentPhase === 'projects'
+                      ? 'Be specific! Mention the technologies, your role, challenges you faced, and how you solved them.'
+                      : currentPhase === 'behavioral'
+                      ? 'Use the STAR method: Situation, Task, Action, Result. Share specific examples from your experience.'
+                      : currentPhase === 'technical'
+                      ? 'Demonstrate your technical depth. Discuss trade-offs, best practices, and your decision-making process.'
+                      : 'Speak clearly and provide detailed answers with specific examples from your experience.'
+                  }
                 </p>
               </div>
             </CardContent>
