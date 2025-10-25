@@ -196,12 +196,11 @@ async function handleResumeUpload(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Parse PDF - temporarily disabled due to library compatibility issues
+    // Parse PDF
     let extractedText = '';
     try {
-      // const pdfData = await pdf(buffer);
-      // extractedText = pdfData.text;
-      extractedText = "PDF parsing temporarily disabled - please use text input for now";
+      const pdfData = await pdf(buffer);
+      extractedText = pdfData.text;
     } catch (pdfError) {
       console.error('PDF parsing error:', pdfError);
       return NextResponse.json({ error: 'Failed to parse PDF' }, { status: 400 });
