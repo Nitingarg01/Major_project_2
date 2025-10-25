@@ -260,6 +260,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "API structure ✅ working correctly (authentication, validation, MongoDB updates, fallback feedback). OpenAI integration ❌ failing due to invalid API key 'test_openai_key'. SOLUTION: Replace EMERGENT_LLM_KEY with real OpenAI API key. Fallback feedback system implemented."
+      - working: false
+        agent: "testing"
+        comment: "CONFIRMED: API structure ✅ working perfectly (authentication check working, returns 401 for unauthorized requests). OpenAI integration ❌ still failing due to test API key 'test_openai_key'. SOLUTION: Need real OpenAI API key from platform.openai.com."
   
   - task: "Complete Interview API"
     implemented: true
