@@ -352,18 +352,37 @@ async function handleCreateInterview(request) {
     const client = await clientPromise;
     const db = client.db('Cluster0');
     
-    // Get resume if provided
-    let resumeContext = '';
+    const numQs = numQuestions || 5;
+    let questions = [];
+
+    // Get resume if provided for personalized questions
     if (resumeId && resumeId !== 'none') {
       const resume = await db.collection('resumes').findOne({ id: resumeId, userId: user.id });
-      if (resume) {
-        resumeContext = `\n\nCandidate's Resume Summary:\n${resume.extractedText?.substring(0, 1000)}`;
+      
+      if (resume && resume.analysis) {
+        console.log('Generating personalized questions based on resume...');
+        
+        try {
+          // Generate highly personalized questions using AI Service
+          questions = await AIService.generatePersonalizedQuestions(
+            resume.analysis,
+            jobRole,
+            experienceLevel,
+            numQs
+          );
+          console.log('Personalized questions generated successfully');
+        } catch (error) {
+          console.error('Error generating personalized questions:', error);
+          // Will fall through to generic questions
+        }
       }
     }
 
-    // Generate interview questions using OpenAI (Emergent LLM Key)
-    const numQs = numQuestions || 5;
-    const prompt = `Generate ${numQs} interview questions for a ${jobRole} position with ${experienceLevel} experience level.${resumeContext}
+    // If no resume or personalized generation failed, generate generic questions
+    if (questions.length === 0) {
+      console.log('Generating generic interview questions...');
+      
+      const prompt = `Generate ${numQs} professional interview questions for a ${jobRole} position with ${experienceLevel} experience level.
 
 The questions should:
 1. Be relevant to the role and experience level
@@ -372,35 +391,34 @@ The questions should:
 4. Progress from easier to harder
 
 Return ONLY a JSON array of question objects with this structure:
-[{"question": "question text"}]`;
+[{"question": "question text", "type": "technical|behavioral", "category": "general"}]`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are an expert interviewer. Generate relevant interview questions.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-    });
+      const systemMessage = 'You are an expert interviewer. Generate relevant interview questions in valid JSON format.';
 
-    let questions = [];
-    try {
-      const responseText = completion.choices[0].message.content;
-      const parsed = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
-      questions = parsed.map((q, index) => ({
-        id: index,
-        question: q.question || q.text || q
-      }));
-    } catch (error) {
-      console.error('Failed to parse questions:', error);
-      // Fallback questions
-      questions = [
-        { id: 0, question: `Tell me about yourself and your experience with ${jobRole}.` },
-        { id: 1, question: `What are your key strengths relevant to this ${jobRole} position?` },
-        { id: 2, question: `Describe a challenging project you worked on.` },
-        { id: 3, question: `Where do you see yourself in 5 years?` },
-        { id: 4, question: `Why are you interested in this position?` },
-      ].slice(0, numQs);
+      try {
+        const response = await AIService.generateCompletion(prompt, systemMessage, {
+          temperature: 0.7,
+          maxTokens: 1500
+        });
+
+        const parsed = JSON.parse(response.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+        questions = parsed.map((q, index) => ({
+          id: index,
+          question: q.question || q.text || q,
+          type: q.type || 'general',
+          category: q.category || 'general'
+        }));
+      } catch (error) {
+        console.error('Failed to generate questions:', error);
+        // Ultimate fallback questions
+        questions = [
+          { id: 0, question: `Tell me about yourself and your experience with ${jobRole}.`, type: 'behavioral', category: 'general' },
+          { id: 1, question: `What are your key strengths relevant to this ${jobRole} position?`, type: 'behavioral', category: 'general' },
+          { id: 2, question: `Describe a challenging project you worked on and how you handled it.`, type: 'behavioral', category: 'general' },
+          { id: 3, question: `What technologies are you most comfortable with and why?`, type: 'technical', category: 'general' },
+          { id: 4, question: `Where do you see yourself in 5 years?`, type: 'behavioral', category: 'general' },
+        ].slice(0, numQs);
+      }
     }
 
     // Create interview record
