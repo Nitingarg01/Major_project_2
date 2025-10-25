@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import openai from '@/lib/openai-client';
-import genAI from '@/lib/gemini-client';
+// Temporarily commenting out problematic imports for authentication testing
+// import openai from '@/lib/openai-client';
+// import genAI from '@/lib/gemini-client';
 import { Resend } from 'resend';
 // import pdf from 'pdf-parse'; // Temporarily disabled due to compatibility issues
-import { ElevenLabsClient } from 'elevenlabs';
+// import { ElevenLabsClient } from 'elevenlabs';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
