@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://26dde6ed-8720-4496-9ead-c3b6f29dd0e9.preview.emergentagent.com"
+BASE_URL = "https://interviewassist.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class Colors:
