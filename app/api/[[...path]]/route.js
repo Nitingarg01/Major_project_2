@@ -878,6 +878,12 @@ async function handleRoute(request, { params }) {
       return handleCORS(await handleSubmitResponse(request, interviewId));
     }
 
+    // Finalize question (PHASE 2 - Get feedback after conversation)
+    if (route.includes('/finalize-question') && method === 'POST') {
+      const interviewId = path[1];
+      return handleCORS(await handleFinalizeQuestion(request, interviewId));
+    }
+
     // Complete interview
     if (route.includes('/complete') && method === 'POST') {
       const interviewId = path[1];
