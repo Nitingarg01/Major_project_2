@@ -368,3 +368,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Complete AI Interview Platform built with all features: Dashboard, Resume Upload with Gemini analysis, Interview Setup, AI Interview Session with animated avatar and voice (ElevenLabs TTS + Web Speech API), and Feedback Report. All API keys provided (.env file created). Need to test all new backend APIs with real integrations (OpenAI via Emergent LLM Key, Gemini, ElevenLabs)."
+  - agent: "main"
+    message: "User reported issues: 1) Resume analysis not showing improvements, 2) Dashboard interview creation not working, 3) Missing interview deletion, 4) Need virtual AI avatar enhancements, 5) Feedback/performance evaluation issues. Starting comprehensive fix - Priority: Interview creation + Resume analysis. Will test backend APIs first, then implement: Resume analysis detail page, fix interview creation, add delete functionality, enhance feedback display."
