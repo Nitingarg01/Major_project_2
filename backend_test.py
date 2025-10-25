@@ -1427,7 +1427,7 @@ def main():
     """Main test execution function"""
     print(f"{Colors.BLUE}{Colors.BOLD}")
     print("=" * 80)
-    print("INTERVIEW PRO AI PLATFORM - BACKEND AUTHENTICATION TESTING")
+    print("INTERVIEW PRO AI PLATFORM - COMPLETE BACKEND API TESTING")
     print("=" * 80)
     print(f"{Colors.END}")
     
@@ -1441,15 +1441,15 @@ def main():
         print_error("Cannot proceed with tests - API is not accessible")
         return
     
-    # Run all authentication tests
+    # Run all tests
     test_results = {}
     
     try:
-        # Test user registration
+        # Authentication Tests (Prerequisites)
+        print_info("\n🔐 Running Authentication Tests...")
         test_results["registration"] = test_user_registration()
-        time.sleep(1)  # Brief pause between tests
+        time.sleep(1)
         
-        # Test user login (only if registration succeeded)
         if test_results["registration"].get("valid_registration"):
             test_results["login"] = test_user_login()
         else:
@@ -1457,13 +1457,43 @@ def main():
             test_results["login"] = {"valid_login": False, "invalid_credentials": False, "missing_credentials": False}
         
         time.sleep(1)
-        
-        # Test forgot password
         test_results["forgot_password"] = test_forgot_password()
         time.sleep(1)
-        
-        # Test reset password
         test_results["reset_password"] = test_reset_password()
+        
+        # Check if authentication is working before proceeding
+        auth_working = (test_results["registration"].get("valid_registration") and 
+                       test_results["login"].get("valid_login"))
+        
+        if not auth_working:
+            print_error("Authentication not working - skipping protected API tests")
+            # Generate report with only auth tests
+            report = generate_test_report(test_results)
+            return report
+        
+        # New API Tests (Require Authentication)
+        print_info("\n📄 Running Resume API Tests...")
+        test_results["resume_upload"] = test_resume_upload()
+        time.sleep(2)  # Longer pause for AI processing
+        test_results["get_resumes"] = test_get_resumes()
+        time.sleep(1)
+        
+        print_info("\n🎯 Running Interview API Tests...")
+        test_results["create_interview"] = test_create_interview()
+        time.sleep(2)  # Longer pause for AI processing
+        test_results["get_interviews"] = test_get_interviews()
+        time.sleep(1)
+        test_results["get_interview"] = test_get_interview()
+        time.sleep(1)
+        
+        print_info("\n💬 Running Interview Response Tests...")
+        test_results["submit_response"] = test_submit_response()
+        time.sleep(2)  # Longer pause for AI processing
+        test_results["complete_interview"] = test_complete_interview()
+        time.sleep(2)  # Longer pause for AI processing
+        
+        print_info("\n🔊 Running Text-to-Speech Tests...")
+        test_results["text_to_speech"] = test_text_to_speech()
         
         # Generate final report
         report = generate_test_report(test_results)
@@ -1474,6 +1504,8 @@ def main():
         print_warning("\nTesting interrupted by user")
     except Exception as e:
         print_error(f"Unexpected error during testing: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
