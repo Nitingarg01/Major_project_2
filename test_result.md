@@ -167,15 +167,18 @@ backend:
   
   - task: "Resume Upload API"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Resume upload with PDF parsing and Gemini analysis. Needs testing with real API keys."
+      - working: false
+        agent: "testing"
+        comment: "API structure ✅ working correctly (proper authentication, file handling, PDF parsing setup). Gemini integration ❌ failing due to invalid API key 'test_gemini_key'. Error: 401 Unauthorized from Gemini API. SOLUTION: Replace with real Gemini API key from Google AI Studio free tier."
   
   - task: "Get Resumes API"
     implemented: true
