@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import openai from '@/lib/openai-client';
 import genAI from '@/lib/gemini-client';
 import { Resend } from 'resend';
-import pdf from 'pdf-parse';
+import * as pdf from 'pdf-parse';
 import { ElevenLabsClient } from 'elevenlabs';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
