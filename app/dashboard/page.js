@@ -137,6 +137,45 @@ export default function DashboardPage() {
     router.push(`/interview/${interviewId}/feedback`);
   };
 
+  const handleDeleteInterview = async () => {
+    if (!interviewToDelete) return;
+
+    try {
+      const response = await fetch(`/api/interview/${interviewToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Interview deleted successfully'
+        });
+        fetchData(); // Refresh the list
+      } else {
+        const data = await response.json();
+        toast({
+          title: 'Delete failed',
+          description: data.error || 'Failed to delete interview',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An error occurred while deleting',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setInterviewToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (interviewId) => {
+    setInterviewToDelete(interviewId);
+    setDeleteDialogOpen(true);
+  };
+
   if (!mounted || status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
