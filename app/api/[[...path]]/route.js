@@ -538,10 +538,10 @@ async function handleSubmitResponse(request, interviewId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { questionId, responseText, audioData } = await request.json();
+    const { questionIndex, answer } = await request.json();
     
-    if (!questionId || !responseText) {
-      return NextResponse.json({ error: 'Question ID and response are required' }, { status: 400 });
+    if (questionIndex === undefined || !answer) {
+      return NextResponse.json({ error: 'Question index and answer are required' }, { status: 400 });
     }
 
     const client = await clientPromise;
@@ -557,7 +557,7 @@ async function handleSubmitResponse(request, interviewId) {
     }
 
     // Find the question
-    const question = interview.questions.find(q => q.id === questionId);
+    const question = interview.questions[questionIndex];
     if (!question) {
       return NextResponse.json({ error: 'Question not found' }, { status: 404 });
     }
@@ -565,16 +565,16 @@ async function handleSubmitResponse(request, interviewId) {
     // Analyze response using OpenAI
     const analysisPrompt = `Analyze this interview response:
 
-Question: ${question.text}
-Response: ${responseText}
+Question: ${question.question}
+Response: ${answer}
+Job Role: ${interview.jobRole}
+Experience Level: ${interview.experienceLevel}
 
-Provide:
+Provide constructive feedback with:
 1. Score (0-10)
-2. Strengths (2-3 points)
-3. Areas for improvement (2-3 points)
-4. Overall feedback
+2. Brief comment (2-3 sentences)
 
-Format as JSON: {score, strengths: [], improvements: [], feedback}`;
+Format as JSON: {"score": number, "comment": "string"}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -585,39 +585,36 @@ Format as JSON: {score, strengths: [], improvements: [], feedback}`;
       temperature: 0.7,
     });
 
-    let analysis = {};
+    let feedback = {};
     try {
       const responseText = completion.choices[0].message.content;
-      analysis = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
+      feedback = JSON.parse(responseText.replace(/```json\n?/g, '').replace(/```\n?/g, ''));
     } catch (error) {
-      analysis = {
+      console.error('Failed to parse feedback:', error);
+      feedback = {
         score: 7,
-        strengths: ['Clear communication'],
-        improvements: ['Could provide more details'],
-        feedback: completion.choices[0].message.content
+        comment: 'Good answer with room for improvement. Try to be more specific and provide concrete examples.'
       };
     }
 
-    // Update interview with response
-    const response = {
-      questionId,
-      responseText,
-      audioData,
-      analysis,
-      timestamp: new Date(),
-    };
-
+    // Update the question with the response
+    const updatePath = `questions.${questionIndex}.response`;
     await db.collection('interviews').updateOne(
       { id: interviewId },
       { 
-        $push: { responses: response },
-        $set: { status: 'in-progress' }
+        $set: { 
+          [updatePath]: {
+            answer,
+            feedback,
+            timestamp: new Date()
+          }
+        }
       }
     );
 
     return NextResponse.json({ 
       success: true, 
-      analysis 
+      feedback 
     });
   } catch (error) {
     console.error('Submit response error:', error);
