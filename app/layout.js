@@ -1,16 +1,16 @@
-import './globals.css'
+'use client';
 
-export const metadata = {
-  title: 'Next.js MongoDB Template',
-  description: 'A simple template with App Router, MongoDB, and shadcn/ui',
-}
+import './globals.css';
+import { SessionProvider } from 'next-auth/react';
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        {children}
+      <body className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
-  )
+  );
 }
