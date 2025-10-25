@@ -179,6 +179,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "API structure ✅ working correctly (proper authentication, file handling, PDF parsing setup). Gemini integration ❌ failing due to invalid API key 'test_gemini_key'. Error: 401 Unauthorized from Gemini API. SOLUTION: Replace with real Gemini API key from Google AI Studio free tier."
+      - working: false
+        agent: "testing"
+        comment: "CONFIRMED: API structure ✅ working perfectly (authentication check working, returns 401 for unauthorized requests). Gemini integration ❌ still failing due to test API key 'test_gemini_key'. SOLUTION: Need real Gemini API key from aistudio.google.com (free tier available)."
   
   - task: "Get Resumes API"
     implemented: true
