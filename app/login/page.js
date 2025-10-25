@@ -52,7 +52,7 @@ export default function LoginPage() {
             <Video className="h-12 w-12 text-indigo-600" />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your InterviewPro account</CardDescription>
+          <CardDescription>Sign in to your MY interview AI account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
