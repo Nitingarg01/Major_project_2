@@ -543,7 +543,11 @@ async function handleTextToSpeech(request) {
     }
 
     // Standard audio generation (without visemes)
-    const audio = await elevenlabs.generate(audioOptions);
+    const audio = await elevenlabs.generate({
+      voice: voiceId,
+      text,
+      model_id: 'eleven_multilingual_v2',
+    });
 
     // Convert audio stream to buffer
     const chunks = [];
