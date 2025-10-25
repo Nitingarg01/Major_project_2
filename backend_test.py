@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for Interview Pro AI Platform
-Tests authentication flow: registration, login, forgot password, reset password
+Tests all backend APIs including authentication, resume upload, interviews, and TTS
 """
 
 import requests
 import json
 import time
 import uuid
+import io
+import os
 from datetime import datetime
 
 # Configuration
