@@ -500,7 +500,7 @@ async function handleGetInterviews(request) {
   }
 }
 
-// TEXT TO SPEECH - POST /api/tts (PHASE 3 ENHANCED - with Viseme data)
+// TEXT TO SPEECH - POST /api/tts (Using direct HTTP API call)
 async function handleTextToSpeech(request) {
   try {
     const { text, returnVisemes = false } = await request.json();
@@ -509,26 +509,42 @@ async function handleTextToSpeech(request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    // Generate audio using ElevenLabs
+    // Generate audio using ElevenLabs direct API call
     // Using Sarah - professional female voice (voice_id: EXAVITQu4vr4xnSDxMaL)
     const voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Sarah - professional female voice
+    const apiKey = process.env.ELEVENLABS_API_KEY || 'sk_9f3bbfeb63f5a7b05c2583d8613fbf9145bd773122abbd17';
     
     console.log('Generating TTS for text:', text.substring(0, 50) + '...');
+    console.log('Using API key:', apiKey.substring(0, 10) + '...');
     
-    // Standard audio generation using the correct ElevenLabs API
-    const audioStream = await elevenlabs.textToSpeech.convert(voiceId, {
-      text: text,
-      model_id: 'eleven_multilingual_v2',
-      output_format: 'mp3_44100_128'
+    // Make direct HTTP request to ElevenLabs API
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.5
+        }
+      })
     });
 
-    // Convert audio stream to buffer
-    const chunks = [];
-    for await (const chunk of audioStream) {
-      chunks.push(chunk);
+    if (!response.ok) {
+      console.error('ElevenLabs API error:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      return NextResponse.json({ error: 'Failed to generate speech' }, { status: 500 });
     }
-    const audioBuffer = Buffer.concat(chunks);
 
+    // Get audio buffer from response
+    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    
     console.log('TTS generation successful, audio size:', audioBuffer.length, 'bytes');
 
     // Return audio as blob
