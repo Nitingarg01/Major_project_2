@@ -45,124 +45,31 @@ def print_info(message):
     print(f"{Colors.BLUE}ℹ️  {message}{Colors.END}")
 
 def create_realistic_resume_pdf():
-    """Create a realistic resume PDF content for ATS analysis testing"""
-    pdf_text = """%PDF-1.4
-1 0 obj
-<<
-/Type /Catalog
-/Pages 2 0 R
->>
-endobj
-
-2 0 obj
-<<
-/Type /Pages
-/Kids [3 0 R]
-/Count 1
->>
-endobj
-
-3 0 obj
-<<
-/Type /Page
-/Parent 2 0 R
-/MediaBox [0 0 612 792]
-/Contents 4 0 R
->>
-endobj
-
-4 0 obj
-<<
-/Length 600
->>
-stream
-BT
-/F1 14 Tf
-72 720 Td
-(EMMA WILSON) Tj
-0 -20 Td
-(Senior Full Stack Developer) Tj
-0 -15 Td
-(emma.wilson@email.com | (555) 987-6543) Tj
-
-0 -30 Td
-/F1 12 Tf
-(PROFESSIONAL SUMMARY) Tj
-0 -15 Td
-/F1 10 Tf
-(Experienced full-stack developer with 6+ years building scalable applications.) Tj
-0 -12 Td
-(Expert in React, Node.js, Python, AWS, and modern development practices.) Tj
-0 -12 Td
-(Led cross-functional teams and delivered 20+ successful projects.) Tj
-
-0 -25 Td
-/F1 12 Tf
-(TECHNICAL SKILLS) Tj
-0 -15 Td
-/F1 10 Tf
-(Frontend: React, Vue.js, TypeScript, HTML5, CSS3, Tailwind CSS) Tj
-0 -12 Td
-(Backend: Node.js, Python, Express, FastAPI, REST APIs, GraphQL) Tj
-0 -12 Td
-(Cloud: AWS (Lambda, EC2, S3, RDS), Docker, Kubernetes, CI/CD) Tj
-0 -12 Td
-(Databases: PostgreSQL, MongoDB, Redis, MySQL) Tj
-
-0 -25 Td
-/F1 12 Tf
-(PROFESSIONAL EXPERIENCE) Tj
-0 -15 Td
-/F1 11 Tf
-(Senior Full Stack Developer | TechSolutions Inc. | 2022-Present) Tj
-0 -12 Td
-/F1 10 Tf
-(Built microservices architecture handling 500K+ requests daily) Tj
-0 -12 Td
-(Improved application performance by 50% through optimization) Tj
-0 -12 Td
-(Led team of 4 developers using Agile methodologies) Tj
-
-0 -20 Td
-/F1 11 Tf
-(Full Stack Developer | InnovateCorp | 2020-2022) Tj
-0 -12 Td
-/F1 10 Tf
-(Developed React-based dashboard with real-time analytics) Tj
-0 -12 Td
-(Implemented automated testing reducing bugs by 60%) Tj
-0 -12 Td
-(Collaborated with UX team to improve user experience) Tj
-
-0 -25 Td
-/F1 12 Tf
-(EDUCATION) Tj
-0 -15 Td
-/F1 10 Tf
-(Master of Science in Computer Science | Tech University | 2020) Tj
-0 -12 Td
-(Bachelor of Science in Software Engineering | State College | 2018) Tj
-
-ET
-endstream
-endobj
-
-xref
-0 5
+    """Load the realistic resume PDF content for ATS analysis testing"""
+    try:
+        with open('/app/test_resume.pdf', 'rb') as f:
+            return f.read()
+    except FileNotFoundError:
+        # Fallback: create a simple text-based PDF if file doesn't exist
+        pdf_text = """%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R>>endobj
+4 0 obj<</Length 200>>stream
+BT /F1 12 Tf 72 720 Td (EMMA WILSON - Senior Full Stack Developer) Tj
+0 -20 Td (Skills: React, Node.js, Python, AWS, Docker, Kubernetes) Tj
+0 -20 Td (Experience: 6+ years in full-stack development) Tj
+0 -20 Td (Education: MS Computer Science, BS Software Engineering) Tj ET
+endstream endobj
+xref 0 5
 0000000000 65535 f 
 0000000009 00000 n 
 0000000058 00000 n 
 0000000115 00000 n 
 0000000204 00000 n 
-trailer
-<<
-/Size 5
-/Root 1 0 R
->>
-startxref
-850
-%%EOF"""
-    return pdf_text.encode('utf-8')
+trailer<</Size 5/Root 1 0 R>>
+startxref 450 %%EOF"""
+        return pdf_text.encode('utf-8')
 
 def register_user():
     """Register a test user"""
