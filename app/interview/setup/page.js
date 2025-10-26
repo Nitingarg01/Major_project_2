@@ -189,13 +189,13 @@ export default function InterviewSetupPage() {
               <Slider
                 id="numQuestions"
                 min={3}
-                max={10}
+                max={50}
                 step={1}
                 value={[numQuestions]}
                 onValueChange={(value) => setNumQuestions(value[0])}
                 className="w-full"
               />
-              <p className="text-sm text-gray-500">Recommended: 5-7 questions for a comprehensive interview</p>
+              <p className="text-sm text-gray-500">No limit! Choose as many questions as you need. Recommended: 5-10 for quick practice, 15-25 for comprehensive interview</p>
             </div>
 
             {/* Resume Selection */}
