@@ -261,7 +261,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Upload Resume */}
           <Card className="border-2 hover:border-indigo-400 transition-all">
             <CardHeader>
@@ -289,6 +289,27 @@ export default function DashboardPage() {
                 className="hidden"
                 disabled={uploading}
               />
+            </CardContent>
+          </Card>
+
+          {/* ATS Resume Analysis */}
+          <Card className="border-2 hover:border-green-400 transition-all bg-gradient-to-br from-green-50 to-emerald-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <span>ATS Analysis</span>
+              </CardTitle>
+              <CardDescription>Get detailed ATS score and improvements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => router.push('/resume-analysis')}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-lg py-6"
+                size="lg"
+              >
+                <Award className="mr-2 h-5 w-5" />
+                Analyze Resume
+              </Button>
             </CardContent>
           </Card>
 
