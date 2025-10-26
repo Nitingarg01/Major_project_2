@@ -1167,6 +1167,16 @@ async function handleRoute(request, { params }) {
       return handleCORS(await handleTextToSpeech(request));
     }
 
+    // ATS Resume Analysis
+    if (route === '/resume/ats-analysis' && method === 'POST') {
+      return handleCORS(await handleATSAnalysis(request));
+    }
+
+    // Get Analysis History
+    if (route === '/resume/analysis-history' && method === 'GET') {
+      return handleCORS(await handleGetAnalysisHistory(request));
+    }
+
     // Route not found
     return handleCORS(NextResponse.json(
       { error: `Route ${route} not found` },
