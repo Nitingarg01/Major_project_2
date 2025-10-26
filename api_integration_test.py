@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://resume-analyzer-42.preview.emergentagent.com"
+BASE_URL = "https://ai-interview-hub-11.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class Colors:
