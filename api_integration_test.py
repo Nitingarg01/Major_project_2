@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://api-key-repair.preview.emergentagent.com"
+BASE_URL = "https://resume-analyzer-42.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class Colors:
