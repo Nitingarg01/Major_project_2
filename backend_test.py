@@ -1754,6 +1754,8 @@ def generate_test_report(test_results):
     
     # New API critical issues
     resume_results = test_results.get("resume_upload", {})
+    ats_results = test_results.get("ats_analysis", {})
+    history_results = test_results.get("analysis_history", {})
     interview_create_results = test_results.get("create_interview", {})
     interview_response_results = test_results.get("submit_response", {})
     interview_complete_results = test_results.get("complete_interview", {})
@@ -1761,6 +1763,10 @@ def generate_test_report(test_results):
     
     if not resume_results.get("valid_upload"):
         critical_issues.append("Resume upload with Gemini analysis not working")
+    if not ats_results.get("valid_analysis"):
+        critical_issues.append("ATS Resume Analysis with Gemini AI not working")
+    if not history_results.get("valid_get"):
+        critical_issues.append("Analysis History retrieval not working")
     if not interview_create_results.get("valid_create"):
         critical_issues.append("Interview creation with OpenAI not working")
     if not interview_response_results.get("valid_submit"):
