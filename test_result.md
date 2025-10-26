@@ -299,6 +299,30 @@ backend:
       - working: false
         agent: "testing"
         comment: "CONFIRMED: API structure ✅ working perfectly (proper request handling, error handling). ElevenLabs integration ❌ still failing due to test API key 'test_elevenlabs_key'. Error: 401 'invalid_api_key' from ElevenLabs API. SOLUTION: Need real ElevenLabs API key from elevenlabs.io."
+  
+  - task: "ATS Resume Analysis API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "NEW FEATURE: ATS resume analysis with Gemini AI. Takes resume PDF and job role, returns ATS score (0-100), category-wise analysis (keywords, formatting, content, experience), improvements list, and strengths. Stores analysis in history. Real Gemini API key configured in .env."
+  
+  - task: "Get Analysis History API"
+    implemented: true
+    working: "NA"
+    file: "/app/app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "NEW FEATURE: Returns user's resume analysis history with scores and job roles. Returns last 20 analyses sorted by date."
 
 frontend:
   - task: "Landing Page"
