@@ -189,6 +189,18 @@ export default function DashboardPage() {
     ? completedInterviews.reduce((acc, i) => acc + (i.overallScore || 0), 0) / completedInterviews.length
     : 0;
 
+  // Calculate performance stats
+  const totalQuestions = completedInterviews.reduce((acc, i) => acc + (i.numQuestions || 0), 0);
+  const highScoreInterviews = completedInterviews.filter(i => (i.overallScore || 0) >= 8).length;
+  const recentInterviews = interviews.slice(0, 5); // Last 5 interviews
+  
+  // Calculate score trend (last 5 completed interviews)
+  const scoreTrend = completedInterviews.slice(0, 5).reverse().map((interview, index) => ({
+    interview: index + 1,
+    score: interview.overallScore || 0,
+    date: new Date(interview.completedAt || interview.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       {/* Header */}
