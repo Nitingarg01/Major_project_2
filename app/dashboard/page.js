@@ -237,7 +237,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="border-2 border-indigo-100 hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Total Interviews</CardTitle>
@@ -262,15 +262,134 @@ export default function DashboardPage() {
 
           <Card className="border-2 border-green-100 hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Resumes</CardTitle>
-              <FileText className="h-5 w-5 text-green-600" />
+              <CardTitle className="text-sm font-medium text-gray-600">High Scores</CardTitle>
+              <TrendingUp className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{resumes.length}</div>
-              <p className="text-xs text-gray-500 mt-1">Ready for analysis</p>
+              <div className="text-3xl font-bold text-green-600">{highScoreInterviews}</div>
+              <p className="text-xs text-gray-500 mt-1">Scored 8+ out of 10</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-orange-100 hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Total Questions</CardTitle>
+              <FileText className="h-5 w-5 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-orange-600">{totalQuestions}</div>
+              <p className="text-xs text-gray-500 mt-1">Answered so far</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Performance Insights - New Section */}
+        {completedInterviews.length > 0 && (
+          <Card className="mb-8 border-2 border-indigo-100">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <TrendingUp className="h-6 w-6 text-indigo-600" />
+                <span>Performance Analytics</span>
+              </CardTitle>
+              <CardDescription>Track your interview performance over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Score Trend Chart */}
+              {scoreTrend.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Score Trend (Last 5 Interviews)</h3>
+                  <div className="flex items-end justify-between h-48 bg-gradient-to-b from-indigo-50 to-white rounded-lg p-4 border border-indigo-200">
+                    {scoreTrend.map((point, index) => {
+                      const height = (point.score / 10) * 100;
+                      return (
+                        <div key={index} className="flex flex-col items-center flex-1">
+                          <div className="text-xs font-bold text-indigo-600 mb-2">{point.score.toFixed(1)}</div>
+                          <div 
+                            className="w-full mx-1 bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t transition-all hover:opacity-80 cursor-pointer"
+                            style={{ height: `${height}%`, minHeight: '20px' }}
+                            title={`Score: ${point.score}/10 on ${point.date}`}
+                          ></div>
+                          <div className="text-xs text-gray-600 mt-2">{point.date}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Performance Metrics Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-700">Completion Rate</span>
+                    <Clock className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {interviews.length > 0 ? Math.round((completedInterviews.length / interviews.length) * 100) : 0}%
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    {completedInterviews.length} of {interviews.length} interviews
+                  </div>
+                </div>
+
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-green-700">Success Rate</span>
+                    <AwardIcon className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {completedInterviews.length > 0 ? Math.round((highScoreInterviews / completedInterviews.length) * 100) : 0}%
+                  </div>
+                  <div className="text-xs text-green-600 mt-1">
+                    {highScoreInterviews} interviews scored 8+
+                  </div>
+                </div>
+
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-purple-700">Avg Questions</span>
+                    <FileText className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {completedInterviews.length > 0 ? Math.round(totalQuestions / completedInterviews.length) : 0}
+                  </div>
+                  <div className="text-xs text-purple-600 mt-1">
+                    per interview session
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Indicator */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+                <h4 className="font-semibold text-gray-800 mb-2">Your Progress</h4>
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-700">Overall Performance</span>
+                      <span className="font-semibold text-indigo-600">{avgScore.toFixed(1)}/10</span>
+                    </div>
+                    <Progress value={(avgScore / 10) * 100} className="h-2" />
+                  </div>
+                  {avgScore < 7 && (
+                    <p className="text-xs text-gray-600 mt-2">
+                      💡 Keep practicing! Focus on providing detailed answers with specific examples to improve your score.
+                    </p>
+                  )}
+                  {avgScore >= 7 && avgScore < 8.5 && (
+                    <p className="text-xs text-gray-600 mt-2">
+                      🎯 Great progress! You're performing well. Try to elaborate more on your technical decisions and problem-solving approach.
+                    </p>
+                  )}
+                  {avgScore >= 8.5 && (
+                    <p className="text-xs text-gray-600 mt-2">
+                      🌟 Excellent work! You're interviewing at a high level. Keep maintaining this consistency!
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
