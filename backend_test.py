@@ -26,6 +26,7 @@ TEST_USER = {
 # Global variables for storing test data
 UPLOADED_RESUME_ID = None
 CREATED_INTERVIEW_ID = None
+ANALYSIS_ID = None
 
 class Colors:
     GREEN = '\033[92m'
