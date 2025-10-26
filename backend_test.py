@@ -1872,6 +1872,12 @@ def main():
         test_results["get_resumes"] = test_get_resumes()
         time.sleep(1)
         
+        print_info("\n🎯 Running ATS Analysis Tests...")
+        test_results["ats_analysis"] = test_ats_resume_analysis()
+        time.sleep(2)  # Longer pause for Gemini AI processing
+        test_results["analysis_history"] = test_get_analysis_history()
+        time.sleep(1)
+        
         print_info("\n🎯 Running Interview API Tests...")
         test_results["create_interview"] = test_create_interview()
         time.sleep(2)  # Longer pause for AI processing
