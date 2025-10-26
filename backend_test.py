@@ -1314,8 +1314,8 @@ def test_text_to_speech():
 
 def create_realistic_resume_pdf():
     """Create a realistic resume PDF content for ATS analysis testing"""
-    # More realistic PDF content for ATS testing
-    pdf_content = b"""%PDF-1.4
+    # More realistic PDF content for ATS testing - using string and encoding to bytes
+    pdf_text = """%PDF-1.4
 1 0 obj
 <<
 /Type /Catalog
@@ -1386,22 +1386,22 @@ BT
 (Senior Software Engineer | TechCorp Inc. | 2021-Present) Tj
 0 -12 Td
 /F1 10 Tf
-(• Developed microservices architecture serving 100K+ daily users) Tj
+(Developed microservices architecture serving 100K+ daily users) Tj
 0 -12 Td
-(• Reduced API response time by 40% through optimization) Tj
+(Reduced API response time by 40% through optimization) Tj
 0 -12 Td
-(• Mentored 3 junior developers and conducted code reviews) Tj
+(Mentored 3 junior developers and conducted code reviews) Tj
 
 0 -20 Td
 /F1 11 Tf
 (Software Engineer | StartupXYZ | 2019-2021) Tj
 0 -12 Td
 /F1 10 Tf
-(• Built full-stack e-commerce platform using React and Node.js) Tj
+(Built full-stack e-commerce platform using React and Node.js) Tj
 0 -12 Td
-(• Implemented CI/CD pipeline reducing deployment time by 60%) Tj
+(Implemented CI/CD pipeline reducing deployment time by 60%) Tj
 0 -12 Td
-(• Collaborated with product team to deliver features on time) Tj
+(Collaborated with product team to deliver features on time) Tj
 
 0 -25 Td
 /F1 12 Tf
@@ -1440,7 +1440,7 @@ trailer
 startxref
 1050
 %%EOF"""
-    return pdf_content
+    return pdf_text.encode('utf-8')
 
 def test_ats_resume_analysis():
     """Test ATS Resume Analysis API"""
