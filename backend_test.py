@@ -1779,11 +1779,14 @@ def generate_test_report(test_results):
     # API Integration Status
     print(f"\n{Colors.BOLD}API INTEGRATION STATUS:{Colors.END}")
     
-    # Gemini Integration
-    if resume_results.get("valid_upload"):
-        print_success("Gemini API (Resume Analysis) - Working")
+    # Gemini Integration (Resume Upload + ATS Analysis)
+    gemini_working = (resume_results.get("valid_upload") and ats_results.get("valid_analysis"))
+    if gemini_working:
+        print_success("Gemini API (Resume Analysis + ATS Analysis) - Working")
+    elif resume_results.get("valid_upload") or ats_results.get("valid_analysis"):
+        print_warning("Gemini API (Resume Analysis + ATS Analysis) - Partially Working")
     else:
-        print_error("Gemini API (Resume Analysis) - Failed")
+        print_error("Gemini API (Resume Analysis + ATS Analysis) - Failed")
     
     # OpenAI Integration
     openai_working = (interview_create_results.get("valid_create") and 
