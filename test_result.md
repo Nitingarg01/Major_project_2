@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Complete AI Interview Platform - Full implementation with Dashboard, Interview Setup, AI Interview Session with voice, and Feedback Report. User requested full flow (Option A) with all features."
+user_problem_statement: "ENHANCEMENT REQUEST: Fix interview platform issues - 1) Create interview errors, 2) Parse resume for skills/projects (verify working), 3) Remove 10 question limit, 4) Fix error after second question answer, 5) Save feedback and show performance stats on dashboard"
 
 backend:
   - task: "User Registration API"
