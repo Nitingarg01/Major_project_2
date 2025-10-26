@@ -449,13 +449,14 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: 
+  current_focus:
     - "Resume Upload API"
-    - "Create Interview API" 
+    - "Create Interview API"
     - "Submit Interview Response API"
     - "Complete Interview API"
     - "Text-to-Speech API (ElevenLabs)"
+    - "ATS Resume Analysis API"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
