@@ -1311,6 +1311,385 @@ def test_text_to_speech():
     
     return results
 
+def create_realistic_resume_pdf():
+    """Create a realistic resume PDF content for ATS analysis testing"""
+    # More realistic PDF content for ATS testing
+    pdf_content = b"""%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Length 800
+>>
+stream
+BT
+/F1 14 Tf
+72 720 Td
+(ALEX JOHNSON) Tj
+0 -20 Td
+(Senior Software Engineer) Tj
+0 -15 Td
+(alex.johnson@email.com | (555) 123-4567 | LinkedIn: /in/alexjohnson) Tj
+
+0 -30 Td
+/F1 12 Tf
+(PROFESSIONAL SUMMARY) Tj
+0 -15 Td
+/F1 10 Tf
+(Experienced software engineer with 5+ years developing scalable web applications.) Tj
+0 -12 Td
+(Proficient in React, Node.js, Python, AWS, and agile methodologies.) Tj
+0 -12 Td
+(Led teams of 3-5 developers and delivered 15+ successful projects.) Tj
+
+0 -25 Td
+/F1 12 Tf
+(TECHNICAL SKILLS) Tj
+0 -15 Td
+/F1 10 Tf
+(Languages: JavaScript, Python, TypeScript, Java, SQL) Tj
+0 -12 Td
+(Frameworks: React, Node.js, Express, Django, Spring Boot) Tj
+0 -12 Td
+(Cloud: AWS (EC2, S3, Lambda), Docker, Kubernetes) Tj
+0 -12 Td
+(Databases: PostgreSQL, MongoDB, Redis) Tj
+
+0 -25 Td
+/F1 12 Tf
+(PROFESSIONAL EXPERIENCE) Tj
+0 -15 Td
+/F1 11 Tf
+(Senior Software Engineer | TechCorp Inc. | 2021-Present) Tj
+0 -12 Td
+/F1 10 Tf
+(• Developed microservices architecture serving 100K+ daily users) Tj
+0 -12 Td
+(• Reduced API response time by 40% through optimization) Tj
+0 -12 Td
+(• Mentored 3 junior developers and conducted code reviews) Tj
+
+0 -20 Td
+/F1 11 Tf
+(Software Engineer | StartupXYZ | 2019-2021) Tj
+0 -12 Td
+/F1 10 Tf
+(• Built full-stack e-commerce platform using React and Node.js) Tj
+0 -12 Td
+(• Implemented CI/CD pipeline reducing deployment time by 60%) Tj
+0 -12 Td
+(• Collaborated with product team to deliver features on time) Tj
+
+0 -25 Td
+/F1 12 Tf
+(EDUCATION) Tj
+0 -15 Td
+/F1 10 Tf
+(Bachelor of Science in Computer Science | State University | 2019) Tj
+0 -12 Td
+(GPA: 3.8/4.0, Dean's List, Computer Science Club President) Tj
+
+0 -25 Td
+/F1 12 Tf
+(PROJECTS) Tj
+0 -15 Td
+/F1 10 Tf
+(Task Management App: React, Node.js, MongoDB - 500+ active users) Tj
+0 -12 Td
+(ML Recommendation System: Python, TensorFlow - 25% engagement increase) Tj
+
+ET
+endstream
+endobj
+
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000204 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+1050
+%%EOF"""
+    return pdf_content
+
+def test_ats_resume_analysis():
+    """Test ATS Resume Analysis API"""
+    print_test_header("ATS Resume Analysis API - POST /api/resume/ats-analysis")
+    
+    results = {
+        "valid_analysis": False,
+        "missing_file": False,
+        "missing_job_role": False,
+        "unauthorized": False
+    }
+    
+    # Test 1: Valid ATS analysis with authentication
+    print_info("Test 1: Valid ATS resume analysis")
+    session = get_auth_session()
+    if session:
+        try:
+            # Create realistic resume PDF for ATS testing
+            pdf_content = create_realistic_resume_pdf()
+            
+            # Prepare form data
+            files = {
+                'file': ('alex_johnson_resume.pdf', io.BytesIO(pdf_content), 'application/pdf')
+            }
+            data = {
+                'jobRole': 'Senior Software Engineer'
+            }
+            
+            response = session.post(
+                f"{API_BASE}/resume/ats-analysis",
+                files=files,
+                data=data,
+                timeout=60  # Longer timeout for Gemini AI processing
+            )
+            
+            print_info(f"Status Code: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get("success") and 
+                    data.get("analysisId") and 
+                    data.get("analysis") and
+                    data["analysis"].get("atsScore") is not None and
+                    data["analysis"].get("categories")):
+                    
+                    print_success("ATS analysis with Gemini AI successful")
+                    analysis = data["analysis"]
+                    print_info(f"Analysis ID: {data['analysisId']}")
+                    print_info(f"ATS Score: {analysis['atsScore']}/100")
+                    
+                    # Check category structure
+                    categories = analysis.get("categories", {})
+                    expected_categories = ["keywords", "formatting", "content", "experience"]
+                    for cat in expected_categories:
+                        if cat in categories:
+                            cat_data = categories[cat]
+                            print_info(f"{cat.title()} Score: {cat_data.get('score', 'N/A')}/100")
+                            print_info(f"{cat.title()} Improvements: {len(cat_data.get('improvements', []))}")
+                    
+                    print_info(f"Strengths: {len(analysis.get('strengths', []))}")
+                    print_info(f"Overall Feedback Length: {len(analysis.get('overallFeedback', ''))}")
+                    
+                    results["valid_analysis"] = True
+                    
+                    # Store analysis ID for history test
+                    global ANALYSIS_ID
+                    ANALYSIS_ID = data['analysisId']
+                else:
+                    print_error("ATS analysis response missing required fields")
+                    print_info(f"Response keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            else:
+                print_error(f"ATS analysis failed with status: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print_error(f"ATS analysis request failed: {str(e)}")
+    else:
+        print_error("Cannot test ATS analysis - authentication failed")
+    
+    # Test 2: Missing file
+    print_info("\nTest 2: ATS analysis without file")
+    if session:
+        try:
+            data = {
+                'jobRole': 'Software Engineer'
+            }
+            
+            response = session.post(
+                f"{API_BASE}/resume/ats-analysis",
+                data=data,
+                timeout=10
+            )
+            
+            print_info(f"Status Code: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            
+            if response.status_code == 400:
+                data = response.json()
+                if "file" in data.get("error", "").lower() and "required" in data.get("error", "").lower():
+                    print_success("Missing file properly validated")
+                    results["missing_file"] = True
+                else:
+                    print_error("Unexpected error message for missing file")
+            else:
+                print_error(f"Expected 400 status for missing file, got: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print_error(f"Missing file test failed: {str(e)}")
+    
+    # Test 3: Missing job role
+    print_info("\nTest 3: ATS analysis without job role")
+    if session:
+        try:
+            pdf_content = create_realistic_resume_pdf()
+            files = {
+                'file': ('test_resume.pdf', io.BytesIO(pdf_content), 'application/pdf')
+            }
+            
+            response = session.post(
+                f"{API_BASE}/resume/ats-analysis",
+                files=files,
+                timeout=10
+            )
+            
+            print_info(f"Status Code: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            
+            if response.status_code == 400:
+                data = response.json()
+                if "job role" in data.get("error", "").lower() and "required" in data.get("error", "").lower():
+                    print_success("Missing job role properly validated")
+                    results["missing_job_role"] = True
+                else:
+                    print_error("Unexpected error message for missing job role")
+            else:
+                print_error(f"Expected 400 status for missing job role, got: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print_error(f"Missing job role test failed: {str(e)}")
+    
+    # Test 4: Unauthorized analysis
+    print_info("\nTest 4: Unauthorized ATS analysis")
+    try:
+        pdf_content = create_realistic_resume_pdf()
+        files = {
+            'file': ('test_resume.pdf', io.BytesIO(pdf_content), 'application/pdf')
+        }
+        data = {
+            'jobRole': 'Software Engineer'
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/resume/ats-analysis",
+            files=files,
+            data=data,
+            timeout=10
+        )
+        
+        print_info(f"Status Code: {response.status_code}")
+        print_info(f"Response: {response.text}")
+        
+        if response.status_code == 401:
+            data = response.json()
+            if "unauthorized" in data.get("error", "").lower():
+                print_success("Unauthorized ATS analysis properly rejected")
+                results["unauthorized"] = True
+            else:
+                print_error("Unexpected error message for unauthorized")
+        else:
+            print_error(f"Expected 401 status for unauthorized, got: {response.status_code}")
+            
+    except requests.exceptions.RequestException as e:
+        print_error(f"Unauthorized test failed: {str(e)}")
+    
+    return results
+
+def test_get_analysis_history():
+    """Test Get Analysis History API"""
+    print_test_header("Get Analysis History API - GET /api/resume/analysis-history")
+    
+    results = {
+        "valid_get": False,
+        "unauthorized": False
+    }
+    
+    # Test 1: Valid get analysis history with authentication
+    print_info("Test 1: Get analysis history with authentication")
+    session = get_auth_session()
+    if session:
+        try:
+            response = session.get(
+                f"{API_BASE}/resume/analysis-history",
+                timeout=10
+            )
+            
+            print_info(f"Status Code: {response.status_code}")
+            print_info(f"Response: {response.text}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "analyses" in data and isinstance(data["analyses"], list):
+                    print_success("Get analysis history successful")
+                    print_info(f"Number of analyses: {len(data['analyses'])}")
+                    
+                    if data["analyses"]:
+                        analysis = data["analyses"][0]
+                        print_info(f"Analysis fields: {list(analysis.keys())}")
+                        print_info(f"Analysis ID: {analysis.get('id')}")
+                        print_info(f"Job Role: {analysis.get('jobRole')}")
+                        print_info(f"File Name: {analysis.get('fileName')}")
+                        if analysis.get('analysis'):
+                            print_info(f"ATS Score: {analysis['analysis'].get('atsScore')}")
+                    
+                    results["valid_get"] = True
+                else:
+                    print_error("Get analysis history response missing analyses array")
+            else:
+                print_error(f"Get analysis history failed with status: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print_error(f"Get analysis history request failed: {str(e)}")
+    else:
+        print_error("Cannot test get analysis history - authentication failed")
+    
+    # Test 2: Unauthorized get analysis history
+    print_info("\nTest 2: Unauthorized get analysis history")
+    try:
+        response = requests.get(
+            f"{API_BASE}/resume/analysis-history",
+            timeout=10
+        )
+        
+        print_info(f"Status Code: {response.status_code}")
+        print_info(f"Response: {response.text}")
+        
+        if response.status_code == 401:
+            data = response.json()
+            if "unauthorized" in data.get("error", "").lower():
+                print_success("Unauthorized get analysis history properly rejected")
+                results["unauthorized"] = True
+            else:
+                print_error("Unexpected error message for unauthorized")
+        else:
+            print_error(f"Expected 401 status for unauthorized, got: {response.status_code}")
+            
+    except requests.exceptions.RequestException as e:
+        print_error(f"Unauthorized test failed: {str(e)}")
+    
+    return results
+
 def generate_test_report(test_results):
     """Generate comprehensive test report"""
     print_test_header("TEST REPORT SUMMARY")
