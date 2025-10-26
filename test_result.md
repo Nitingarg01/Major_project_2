@@ -397,11 +397,14 @@ frontend:
     file: "/app/app/interview/setup/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Interview configuration page with job role, experience level, number of questions, and resume selection."
+      - working: "NA"
+        agent: "main"
+        comment: "ENHANCED: Removed 10 question limit. New max is 50 questions (min 3). Updated description to encourage longer interviews. User can now conduct extensive interview practice sessions without limits."
   
   - task: "Interview Session Page"
     implemented: true
