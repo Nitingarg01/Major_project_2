@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'https://api-key-repair.preview.emergentagent.com')
+BASE_URL = 'http://localhost:3000'  # Use localhost for testing
 API_BASE = f"{BASE_URL}/api"
 
 # Test data
