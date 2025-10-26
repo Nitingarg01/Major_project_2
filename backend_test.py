@@ -1705,6 +1705,8 @@ def generate_test_report(test_results):
         ("reset_password", "Reset Password API"),
         ("resume_upload", "Resume Upload API"),
         ("get_resumes", "Get Resumes API"),
+        ("ats_analysis", "ATS Resume Analysis API"),
+        ("analysis_history", "Get Analysis History API"),
         ("create_interview", "Create Interview API"),
         ("get_interviews", "Get All Interviews API"),
         ("get_interview", "Get Interview API"),
